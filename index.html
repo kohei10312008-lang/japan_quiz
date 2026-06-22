@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>にほんちり クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+  :root {
+    --red:#E63946; --navy:#1D3557; --sky:#A8DADC; --gold:#FFB703;
+    --white:#FFFFFF; --gray:#6B7280; --light:#E8F4F8;
+    --correct:#2D9B4E; --wrong:#DC2626; --radius:16px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:'Noto Sans JP',sans-serif;
+    background:linear-gradient(160deg,#1D3557 0%,#457B9D 60%,#A8DADC 100%);
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+  .screen { display:none; width:100%; max-width:560px; }
+  .screen.active { display:block; }
+  .card { background:var(--white); border-radius:var(--radius); padding:24px 20px; box-shadow:0 8px 32px rgba(0,0,0,0.18); }
+
+  /* HEADER */
+  .app-header { text-align:center; margin-bottom:16px; }
+  .app-header .flag { font-size:48px; display:block; margin-bottom:2px; }
+  .app-title { font-size:24px; font-weight:900; color:var(--navy); letter-spacing:0.06em; }
+  .app-sub { font-size:12px; color:var(--gray); margin-top:3px; }
+
+  /* MODE TABS */
+  .mode-tabs { display:flex; gap:8px; margin-bottom:16px; }
+  .mode-tab {
+    flex:1; padding:12px 6px; border:2.5px solid var(--light); border-radius:12px;
+    background:var(--light); font-family:inherit; font-size:13px; font-weight:700;
+    color:var(--navy); cursor:pointer; text-align:center; transition:all .15s;
+  }
+  .mode-tab .tab-icon { font-size:22px; display:block; margin-bottom:3px; }
+  .mode-tab.selected { border-color:var(--red); background:#fff0f0; color:var(--red); }
+
+  /* FURIGANA */
+  .furigana-row { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-bottom:12px; }
+  .furigana-label { font-size:12px; font-weight:700; color:var(--gray); }
+  .toggle-switch { position:relative; width:44px; height:24px; cursor:pointer; }
+  .toggle-switch input { display:none; }
+  .toggle-track { position:absolute; inset:0; background:#ccc; border-radius:99px; transition:background .2s; }
+  .toggle-switch input:checked + .toggle-track { background:var(--navy); }
+  .toggle-thumb { position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .toggle-switch input:checked ~ .toggle-thumb { left:23px; }
+
+  /* CATEGORY */
+  .section-label { font-size:13px; font-weight:700; color:var(--gray); margin-bottom:8px; }
+  .category-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .cat-btn {
+    background:var(--light); border:2.5px solid transparent; border-radius:12px;
+    padding:12px 8px; cursor:pointer; transition:all .15s; text-align:center; outline:none;
+  }
+  .cat-btn:hover { border-color:var(--navy); background:#ddeffa; }
+  .cat-btn.selected { border-color:var(--red); background:#fff0f0; }
+  .cat-btn .cat-icon { font-size:24px; display:block; margin-bottom:2px; }
+  .cat-btn .cat-name { font-size:13px; font-weight:700; color:var(--navy); display:block; }
+  .cat-btn .cat-count { font-size:11px; color:var(--gray); }
+
+  /* COUNT */
+  .count-row { display:flex; gap:8px; margin-bottom:14px; }
+  .count-btn {
+    flex:1; padding:9px 4px; border:2px solid var(--light); border-radius:10px;
+    background:var(--light); font-family:inherit; font-size:12px; font-weight:700;
+    color:var(--navy); cursor:pointer; transition:all .15s; text-align:center;
+  }
+  .count-btn.selected { border-color:var(--navy); background:var(--navy); color:#fff; }
+
+  .start-btn {
+    display:block; width:100%; padding:15px; background:var(--red); color:var(--white);
+    font-family:inherit; font-size:17px; font-weight:900; border:none; border-radius:12px;
+    cursor:pointer; letter-spacing:.08em; transition:background .15s,transform .1s;
+    box-shadow:0 4px 12px rgba(230,57,70,.35);
+  }
+  .start-btn:hover { background:#c0192a; transform:translateY(-1px); }
+  .start-btn:disabled { background:#ccc; box-shadow:none; transform:none; cursor:not-allowed; }
+
+  /* QUIZ META */
+  .quiz-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .progress-wrap { flex:1; background:var(--light); border-radius:99px; height:8px; margin:0 10px; overflow:hidden; }
+  .progress-bar { height:100%; background:var(--red); border-radius:99px; transition:width .4s; }
+  .meta-label { font-size:12px; font-weight:700; color:var(--gray); white-space:nowrap; }
+  .score-badge { background:var(--gold); color:var(--navy); font-size:13px; font-weight:900; padding:4px 10px; border-radius:99px; }
+
+  /* TIMER */
+  .timer-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .timer-track { flex:1; background:#eee; border-radius:99px; height:7px; overflow:hidden; }
+  .timer-fill { height:100%; border-radius:99px; background:var(--gold); transition:width .1s linear,background .5s; }
+  .timer-fill.hurry { background:var(--red); }
+  .timer-num { font-size:13px; font-weight:900; color:var(--navy); min-width:28px; text-align:right; }
+
+  /* TOP BAR */
+  .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .q-category-tag { display:inline-block; background:var(--navy); color:var(--white); font-size:11px; font-weight:700; padding:3px 10px; border-radius:99px; }
+  .streak-badge { background:#fff3cd; color:#b45309; font-size:12px; font-weight:900; padding:3px 10px; border-radius:99px; display:none; align-items:center; gap:4px; }
+  .streak-badge.show { display:flex; }
+  .diff-badge { font-size:11px; font-weight:700; padding:3px 8px; border-radius:99px; }
+  .diff-easy { background:#e6f9ee; color:#2D9B4E; }
+  .diff-mid  { background:#fff3cd; color:#b45309; }
+  .diff-hard { background:#fdecea; color:#DC2626; }
+
+  /* QUESTION (4択モード) */
+  .question-text { font-size:18px; font-weight:700; color:var(--navy); line-height:1.6; min-height:56px; margin-bottom:6px; }
+  ruby { ruby-align:center; }
+  rt { font-size:.55em; color:var(--navy); opacity:.7; }
+  body.no-furigana rt { display:none; }
+  .question-hint { font-size:12px; color:var(--gray); margin-bottom:14px; }
+
+  .choices { display:flex; flex-direction:column; gap:8px; }
+  .choice-btn {
+    background:var(--light); border:2.5px solid transparent; border-radius:12px;
+    padding:12px 14px; font-family:inherit; font-size:14px; font-weight:700;
+    color:var(--navy); cursor:pointer; text-align:left; transition:all .12s;
+    outline:none; display:flex; align-items:center; gap:10px;
+  }
+  .choice-letter {
+    width:26px; height:26px; background:var(--white); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:900; flex-shrink:0; border:2px solid #cdd;
+  }
+  .choice-btn:not(:disabled):hover { border-color:var(--navy); background:#ddeffa; }
+  .choice-btn.correct { background:#e6f9ee; border-color:var(--correct); color:var(--correct); }
+  .choice-btn.correct .choice-letter { background:var(--correct); color:#fff; border-color:var(--correct); }
+  .choice-btn.wrong   { background:#fdecea; border-color:var(--wrong);   color:var(--wrong);   }
+  .choice-btn.wrong   .choice-letter { background:var(--wrong);   color:#fff; border-color:var(--wrong); }
+
+  /* MAP MODE */
+  .map-question { font-size:17px; font-weight:700; color:var(--navy); text-align:center; margin-bottom:10px; line-height:1.5; }
+  .map-wrap {
+    width:100%; background:#EEF6FF; border-radius:12px; overflow:hidden;
+    border:2px solid var(--light); position:relative; margin-bottom:10px;
+    touch-action:none;
+  }
+  .map-wrap svg { display:block; width:100%; height:auto; }
+
+  /* 都道府県パス */
+  .pref-path {
+    fill:#B8D4E8; stroke:#fff; stroke-width:0.8;
+    cursor:pointer; transition:fill .15s;
+  }
+  .pref-path:hover { fill:#7FB3D3; }
+  .pref-path.target  { fill:#FFD166; stroke:#E63946; stroke-width:1.5; }
+  .pref-path.correct-pref { fill:#2D9B4E; stroke:#fff; stroke-width:0.8; animation:flash-correct .4s ease; }
+  .pref-path.wrong-pref   { fill:#DC2626; stroke:#fff; stroke-width:0.8; animation:flash-wrong .4s ease; }
+  .pref-path.show-correct { fill:#2D9B4E; stroke:#fff; stroke-width:0.8; }
+  @keyframes flash-correct { 0%{fill:#fff} 100%{fill:#2D9B4E} }
+  @keyframes flash-wrong   { 0%{fill:#fff} 100%{fill:#DC2626} }
+
+  .map-hint { font-size:11px; color:var(--gray); text-align:center; margin-bottom:6px; }
+  .map-hint-btn {
+    display:inline-block; margin:0 auto 8px; padding:5px 14px;
+    border:1.5px solid var(--navy); background:transparent; border-radius:99px;
+    font-family:inherit; font-size:12px; font-weight:700; color:var(--navy);
+    cursor:pointer; transition:all .15s;
+  }
+  .map-hint-btn:hover { background:var(--navy); color:#fff; }
+  .map-hint-area { text-align:center; margin-bottom:6px; min-height:18px; }
+
+  /* FEEDBACK */
+  .feedback-bar {
+    margin-top:10px; padding:11px 14px; border-radius:10px;
+    font-size:14px; font-weight:700; display:none; align-items:center; gap:8px;
+    animation:pop .2s ease;
+  }
+  .feedback-bar.show { display:flex; }
+  .feedback-bar.ok { background:#e6f9ee; color:var(--correct); }
+  .feedback-bar.ng { background:#fdecea; color:var(--wrong); }
+  @keyframes pop { from{transform:scale(.95);opacity:.4} to{transform:scale(1);opacity:1} }
+
+  .next-btn {
+    display:none; width:100%; margin-top:10px; padding:13px;
+    background:var(--navy); color:var(--white); font-family:inherit;
+    font-size:15px; font-weight:700; border:none; border-radius:12px;
+    cursor:pointer; letter-spacing:.05em; transition:background .15s;
+  }
+  .next-btn:hover { background:#152840; }
+  .next-btn.show { display:block; }
+
+  /* RESULT */
+  .result-hero { text-align:center; padding:10px 0 6px; }
+  .result-emoji { font-size:56px; display:block; }
+  .result-score-big { font-size:44px; font-weight:900; color:var(--navy); line-height:1; margin:6px 0 3px; }
+  .result-label { font-size:13px; color:var(--gray); }
+  .result-message { text-align:center; font-size:16px; font-weight:700; color:var(--navy); margin:10px 0 14px; }
+  .result-breakdown { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .stat-box { background:var(--light); border-radius:10px; padding:10px; text-align:center; }
+  .stat-val { font-size:20px; font-weight:900; color:var(--navy); }
+  .stat-key { font-size:11px; color:var(--gray); }
+  .review-list { margin-bottom:14px; max-height:220px; overflow-y:auto; }
+  .review-item { border-left:4px solid transparent; padding:7px 9px; margin-bottom:5px; border-radius:0 8px 8px 0; font-size:12px; line-height:1.5; }
+  .review-item.ok { border-color:var(--correct); background:#e6f9ee; }
+  .review-item.ng { border-color:var(--wrong);   background:#fdecea; }
+  .rv-q { font-weight:700; color:var(--navy); }
+  .rv-a { color:var(--gray); margin-top:1px; }
+  .retry-btn {
+    display:block; width:100%; padding:14px; background:var(--red); color:var(--white);
+    font-family:inherit; font-size:16px; font-weight:900; border:none; border-radius:12px;
+    cursor:pointer; margin-bottom:8px; box-shadow:0 4px 12px rgba(230,57,70,.3);
+  }
+  .back-btn {
+    display:block; width:100%; padding:12px; background:var(--light);
+    color:var(--navy); font-family:inherit; font-size:14px; font-weight:700;
+    border:none; border-radius:12px; cursor:pointer;
+  }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  .bouncing { animation:bounce .5s ease 3; }
+
+  /* ===== BADGE ===== */
+  .badge-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; min-height:36px; }
+  .badge-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:4px; }
+  .badge-item {
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    background:var(--light); border-radius:10px; padding:8px 4px; position:relative;
+  }
+  .badge-item.locked { opacity:0.35; filter:grayscale(1); }
+  .badge-item.new-glow { animation:glow .8s ease 3; }
+  @keyframes glow { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 12px 4px #FFB703;} }
+  .badge-icon { font-size:26px; line-height:1; }
+  .badge-name { font-size:9px; font-weight:700; color:var(--navy); margin-top:3px; line-height:1.2; }
+  .badge-new { position:absolute; top:-4px; right:-4px; background:var(--red); color:#fff;
+    font-size:9px; font-weight:900; padding:1px 5px; border-radius:99px; }
+
+  /* ===== RANKING ===== */
+  .rank-cat-btn {
+    padding:5px 12px; border:2px solid var(--light); border-radius:99px;
+    background:var(--light); font-family:inherit; font-size:12px; font-weight:700;
+    color:var(--navy); cursor:pointer;
+  }
+  .rank-cat-btn.active { border-color:var(--navy); background:var(--navy); color:#fff; }
+  .rank-table { width:100%; border-collapse:collapse; }
+  .rank-table th { font-size:11px; color:var(--gray); padding:4px 6px; text-align:left; border-bottom:2px solid var(--light); }
+  .rank-table td { font-size:13px; padding:8px 6px; border-bottom:1px solid var(--light); font-weight:700; color:var(--navy); }
+  .rank-table tr:first-child td { color:#B45309; }
+  .rank-table tr:nth-child(2) td { color:#6B7280; }
+  .rank-table tr:nth-child(3) td { color:#92400E; }
+  .rank-medal { font-size:16px; }
+  .rank-empty { text-align:center; color:var(--gray); font-size:13px; padding:20px 0; }
+
+  /* ===== SPLASH ===== */
+  #splash {
+    position:fixed; inset:0; z-index:9999;
+    background:linear-gradient(160deg,#1D3557 0%,#457B9D 55%,#A8DADC 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  }
+  #splash.hide { animation:splashOut .55s ease forwards; pointer-events:none; }
+  @keyframes splashOut { to { opacity:0; transform:scale(1.03); } }
+  .splash-logo {
+    font-size:80px; animation:splashBounce .7s cubic-bezier(.36,.07,.19,.97) both;
+    filter:drop-shadow(0 4px 16px rgba(0,0,0,.3));
+  }
+  @keyframes splashBounce {
+    0%  { transform:scale(0) rotate(-15deg); opacity:0; }
+    60% { transform:scale(1.2) rotate(6deg); opacity:1; }
+    80% { transform:scale(.95) rotate(-3deg); }
+    100%{ transform:scale(1) rotate(0); }
+  }
+  .splash-title { font-size:28px; font-weight:900; color:#fff; letter-spacing:.1em;
+    text-shadow:0 2px 8px rgba(0,0,0,.25); animation:fadeUp .5s .3s both; }
+  .splash-sub { font-size:14px; color:rgba(255,255,255,.82); font-weight:700;
+    animation:fadeUp .5s .5s both; }
+  .splash-dots { display:flex; gap:8px; margin-top:8px; animation:fadeUp .4s .7s both; }
+  .splash-dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.5);
+    animation:dotPulse 1.2s .9s infinite ease-in-out; }
+  .splash-dot:nth-child(2){ animation-delay:1.05s; }
+  .splash-dot:nth-child(3){ animation-delay:1.2s; }
+  @keyframes dotPulse { 0%,100%{opacity:.4;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+
+  /* ===== FLASH OVERLAY ===== */
+  #correct-overlay {
+    position:fixed; inset:0; z-index:8000; pointer-events:none;
+    display:flex; align-items:center; justify-content:center; opacity:0;
+  }
+  #correct-overlay.flash-ok { animation:flashOk .55s ease forwards; }
+  #correct-overlay.flash-ng { animation:flashNg .45s ease forwards; }
+  @keyframes flashOk {
+    0%{opacity:0;background:rgba(45,155,78,0)} 30%{opacity:1;background:rgba(45,155,78,.15)} 100%{opacity:0;background:rgba(45,155,78,0)}
+  }
+  @keyframes flashNg {
+    0%{opacity:0;background:rgba(220,38,38,0)} 30%{opacity:1;background:rgba(220,38,38,.12)} 100%{opacity:0;background:rgba(220,38,38,0)}
+  }
+  .overlay-stamp { font-size:90px; transform:scale(0); opacity:0; }
+  .flash-ok .overlay-stamp { animation:stampIn .45s cubic-bezier(.36,.07,.19,.97) .05s forwards; }
+  .flash-ng .overlay-stamp { animation:stampShake .4s ease .05s forwards; }
+  @keyframes stampIn {
+    0%{transform:scale(0) rotate(-20deg);opacity:0} 60%{transform:scale(1.25) rotate(6deg);opacity:1} 100%{transform:scale(1) rotate(0);opacity:1}
+  }
+  @keyframes stampShake {
+    0%{transform:scale(0);opacity:0} 40%{transform:scale(1.1) translateX(-6px);opacity:1}
+    60%{transform:translateX(6px)} 80%{transform:translateX(-4px)} 100%{transform:none;opacity:1}
+  }
+
+  /* ===== PARTICLES ===== */
+  #particle-canvas { position:fixed; inset:0; z-index:7999; pointer-events:none; }
+
+  /* ===== CARD SHAKE ===== */
+  @keyframes cardShake {
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)}
+  }
+  .shake { animation:cardShake .35s ease; }
+
+  /* ===== CORRECT PULSE ===== */
+  @keyframes choicePulse {
+    0%{box-shadow:0 0 0 0 rgba(45,155,78,.5)} 60%{box-shadow:0 0 0 12px rgba(45,155,78,0)} 100%{box-shadow:none}
+  }
+  .choice-btn.correct { animation:choicePulse .55s ease .08s; }
+
+  /* ===== SCREEN IN ===== */
+  .screen.active { animation:screenIn .28s ease; }
+  @keyframes screenIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+
+  /* ===== 途中もどるボタン ===== */
+  .quit-btn {
+    position:absolute; top:0; right:0;
+    background:none; border:none; font-size:20px; cursor:pointer;
+    color:var(--gray); padding:4px 6px; line-height:1;
+    transition:color .15s;
+  }
+  .quit-btn:hover { color:var(--red); }
+  .quiz-card-wrap { position:relative; }
+
+  /* ===== 復習モードバナー ===== */
+  .review-mode-banner {
+    background:linear-gradient(90deg,#FF6B35,#E63946);
+    color:#fff; font-size:12px; font-weight:900;
+    padding:6px 14px; border-radius:99px;
+    text-align:center; margin-bottom:10px;
+    letter-spacing:.05em;
+  }
+
+  /* ===== 進捗画面 ===== */
+  .progress-screen-header {
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;
+  }
+  .stat-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;
+  }
+  .stat-card {
+    background:var(--light); border-radius:12px; padding:12px 10px; text-align:center;
+  }
+  .stat-card .sc-val { font-size:24px; font-weight:900; color:var(--navy); }
+  .stat-card .sc-key { font-size:11px; color:var(--gray); margin-top:2px; }
+  .cat-progress-list { margin-bottom:16px; }
+  .cat-progress-item { margin-bottom:12px; }
+  .cat-progress-label {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; font-weight:700; color:var(--navy); margin-bottom:4px;
+  }
+  .cat-progress-rate { font-size:12px; color:var(--gray); }
+  .cat-bar-bg {
+    background:#e2e8f0; border-radius:99px; height:10px; overflow:hidden;
+  }
+  .cat-bar-fill {
+    height:100%; border-radius:99px;
+    transition:width .6s cubic-bezier(.4,0,.2,1);
+  }
+  .wrong-count-badge {
+    display:inline-block; background:#fdecea; color:var(--wrong);
+    font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; margin-left:6px;
+  }
+  .review-start-btn {
+    display:block; width:100%; padding:13px; margin-top:6px;
+    background:linear-gradient(90deg,#FF6B35,#E63946);
+    color:#fff; font-family:inherit; font-size:15px; font-weight:900;
+    border:none; border-radius:12px; cursor:pointer;
+    box-shadow:0 4px 12px rgba(230,57,70,.3);
+    transition:opacity .15s;
+  }
+  .review-start-btn:disabled { opacity:.45; cursor:not-allowed; }
+</style>
+</head>
+<body>
+
+<!-- ===== SPLASH ===== -->
+<div id="splash">
+  <div class="splash-logo">🗾</div>
+  <div class="splash-title">にほんちり クイズ</div>
+  <div class="splash-sub">小学生のための日本地理べんきょうアプリ</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
+
+<!-- ===== FLASH OVERLAY ===== -->
+<div id="correct-overlay"><div class="overlay-stamp" id="overlay-stamp"></div></div>
+
+<!-- ===== PARTICLE CANVAS ===== -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- ===== TITLE ===== -->
+<div id="screen-title" class="screen active">
+  <div class="card">
+    <div class="app-header" style="position:relative;">
+      <span class="flag">🗾</span>
+      <div class="app-title">にほんちり クイズ</div>
+      <div class="app-sub">小学生のための日本地理べんきょうアプリ</div>
+      <button onclick="showScreen('screen-progress')" style="position:absolute;top:0;right:0;background:none;border:none;cursor:pointer;font-size:22px;" title="進捗をみる">📊</button>
+    </div>
+
+    <div class="furigana-row">
+      <span class="furigana-label">ふりがな</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="furigana-toggle" checked onchange="applyFurigana()">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+
+    <div class="section-label">カテゴリをえらぼう（複数OK）</div>
+      <div class="category-grid" id="cat-grid"></div>
+      <div class="section-label">もんだいの数</div>
+      <div class="count-row">
+        <button class="count-btn" data-n="5"  onclick="selectCount(5,this)">5もん</button>
+        <button class="count-btn selected" data-n="10" onclick="selectCount(10,this)">10もん</button>
+        <button class="count-btn" data-n="20" onclick="selectCount(20,this)">20もん</button>
+        <button class="count-btn" data-n="0"  onclick="selectCount(0,this)">ぜんぶ</button>
+      </div>
+    </div>
+
+    <button class="start-btn" id="start-btn" onclick="startQuiz()" disabled>スタート！</button>
+  </div>
+</div>
+
+<!-- ===== QUIZ (4択) ===== -->
+<div id="screen-quiz" class="screen">
+  <div class="card quiz-card-wrap">
+    <button class="quit-btn" onclick="confirmQuit()" title="やめる">✕</button>
+    <div id="review-mode-banner" class="review-mode-banner" style="display:none">📝 まちがい復習モード</div>
+    <div class="quiz-meta">
+      <span class="meta-label" id="q-counter">1 / 10</span>
+      <div class="progress-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+      <span class="score-badge" id="score-live">⭐ 0</span>
+    </div>
+    <div class="timer-row">
+      <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+      <div class="timer-num" id="timer-num">15</div>
+    </div>
+    <div class="top-bar">
+      <div class="q-category-tag" id="q-tag"></div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span class="diff-badge" id="diff-badge"></span>
+        <div class="streak-badge" id="streak-badge"><span>🔥</span><span id="streak-num">0</span>れんぞく！</div>
+      </div>
+    </div>
+    <div class="question-text" id="q-text"></div>
+    <div class="question-hint" id="q-hint"></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback-bar" id="feedback-bar"><span id="fb-text"></span></div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">つぎへ →</button>
+  </div>
+</div>
+
+
+<!-- ===== PROGRESS ===== -->
+<div id="screen-progress" class="screen">
+  <div class="card">
+    <div class="progress-screen-header">
+      <div class="app-title" style="font-size:20px;">📊 しんちょく</div>
+      <button class="back-btn" style="width:auto;padding:8px 14px;" onclick="showScreen('screen-title')">もどる</button>
+    </div>
+    <div class="stat-grid" id="prog-stat-grid"></div>
+    <div class="section-label">カテゴリ別せいかいりつ</div>
+    <div class="cat-progress-list" id="prog-cat-list"></div>
+    <div class="section-label">まちがえた問題</div>
+    <div style="font-size:13px;color:var(--gray);margin-bottom:8px;" id="wrong-summary"></div>
+    <button class="review-start-btn" id="prog-review-btn" onclick="startReviewFromProgress()">📝 まちがい問題を復習する</button>
+  </div>
+</div>
+
+<!-- ===== RANKING ===== -->
+<div id="screen-rank" class="screen">
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="app-title" style="font-size:20px;">🏆 ランキング</div>
+      <button class="back-btn" style="width:auto;padding:8px 14px;" onclick="showScreen('screen-title')">もどる</button>
+    </div>
+    <div class="section-label">カテゴリをえらぶ</div>
+    <div id="rank-cat-tabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;"></div>
+    <div id="rank-list"></div>
+    <div class="section-label" style="margin-top:14px;">かくとくバッジ一覧</div>
+    <div id="all-badges" class="badge-grid"></div>
+    <button class="back-btn" style="margin-top:14px;color:#DC2626;border:1.5px solid #DC2626;" onclick="if(confirm('きろくをすべて消しますか？'))clearRecords()">🗑 きろくをリセット</button>
+  </div>
+</div>
+<!-- ===== RESULT ===== -->
+<div id="screen-result" class="screen">
+  <div class="card">
+    <div class="result-hero">
+      <span class="result-emoji" id="result-emoji">🎉</span>
+      <div class="result-score-big" id="result-score">0/10</div>
+      <div class="result-label">せいかいすう</div>
+    </div>
+    <div class="result-message" id="result-msg"></div>
+    <div class="result-breakdown">
+      <div class="stat-box"><div class="stat-val" id="r-correct">0</div><div class="stat-key">✅ せいかい</div></div>
+      <div class="stat-box"><div class="stat-val" id="r-wrong">0</div><div class="stat-key">❌ まちがい</div></div>
+      <div class="stat-box"><div class="stat-val" id="r-streak">0</div><div class="stat-key">🔥 さいこうれんぞく</div></div>
+      <div class="stat-box"><div class="stat-val" id="r-rate">0%</div><div class="stat-key">📊 せいかいりつ</div></div>
+    </div>
+    <div class="section-label">もんだいのふりかえり</div>
+    <div class="review-list" id="review-list"></div>
+    <div class="section-label">かくとくしたバッジ</div>
+    <div id="new-badges" class="badge-row"></div>
+    <button class="retry-btn" onclick="retryQuiz()">もういちど！</button>
+    <button class="review-start-btn" id="review-btn" onclick="startReview()">📝 まちがいだけ復習する</button>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="back-btn" style="flex:1" onclick="goTitle()">もどる</button>
+      <button class="back-btn" style="flex:1;background:#1D3557;color:#fff;" onclick="showScreen('screen-rank')">🏆 ランキング</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================
+// カテゴリ・問題データ
+// =====================================================
+const CATEGORIES = [
+  { id:'pref',     name:'都道府県',   icon:'🏯' },
+  { id:'capital',  name:'県庁所在地', icon:'🏙️' },
+  { id:'region',   name:'地方区分',   icon:'🗺️' },
+  { id:'mountain', name:'山',         icon:'🗻' },
+  { id:'river',    name:'川',         icon:'💧' },
+  { id:'island',   name:'島・半島',   icon:'🏝️' },
+];
+const R = (k,r) => `<ruby>${k}<rt>${r}</rt></ruby>`;
+const QUESTIONS = {
+  pref:[
+    {q:`もっとも${R('面積','めんせき')}が${R('大','おお')}きい${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','岩手県','福島県','長野県'],hint:'北にある大きな島です',diff:1},
+    {q:`もっとも${R('面積','めんせき')}が${R('小','ちい')}さい${R('都道府県','とどうふけん')}は？`,a:'大阪府',choices:['大阪府','香川県','東京都','神奈川県'],hint:'関西の都市部にある府です',diff:3},
+    {q:`もっとも${R('人口','じんこう')}が${R('多','おお')}い${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','大阪府','神奈川県','愛知県'],hint:'日本の首都です',diff:1},
+    {q:`もっとも${R('人口','じんこう')}が${R('少','すく')}ない${R('都道府県','とどうふけん')}は？`,a:'鳥取県',choices:['鳥取県','島根県','高知県','徳島県'],hint:'砂丘が有名な県です',diff:2},
+    {q:`${R('琵琶湖','びわこ')}がある${R('都道府県','とどうふけん')}は？`,a:'滋賀県',choices:['滋賀県','三重県','福井県','岐阜県'],hint:'日本最大の湖がある県です',diff:1},
+    {q:`${R('出雲大社','いずもたいしゃ')}がある${R('都道府県','とどうふけん')}は？`,a:'島根県',choices:['島根県','鳥取県','岡山県','広島県'],hint:'縁結びの神様で有名です',diff:1},
+    {q:`${R('阿波おどり','あわおどり')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'徳島県',choices:['徳島県','高知県','愛媛県','香川県'],hint:'四国にある県です',diff:1},
+    {q:`${R('うどん','うどん')}の${R('消費量','しょうひりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'香川県',choices:['香川県','大阪府','愛知県','福岡県'],hint:'讃岐うどんで有名です',diff:1},
+    {q:`${R('桃太郎','ももたろう')}のでんせつで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'岡山県',choices:['岡山県','広島県','兵庫県','鳥取県'],hint:'きびだんごも名物です',diff:1},
+    {q:`${R('ねぶた祭','ねぶたまつ')}りで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'青森県',choices:['青森県','秋田県','岩手県','宮城県'],hint:'東北地方の北端にある県です',diff:1},
+    {q:`${R('なまはげ','なまはげ')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'秋田県',choices:['秋田県','青森県','岩手県','山形県'],hint:'日本海側の東北の県です',diff:1},
+    {q:`${R('梅','うめ')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'和歌山県',choices:['和歌山県','奈良県','三重県','愛媛県'],hint:'紀伊半島の南にある県です',diff:2},
+    {q:`${R('さくらんぼ','さくらんぼ')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'山形県',choices:['山形県','山梨県','長野県','青森県'],hint:'東北地方にある県です',diff:2},
+    {q:`${R('みかん','みかん')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'和歌山県',choices:['和歌山県','愛媛県','静岡県','熊本県'],hint:'紀伊半島の南にある県です',diff:2},
+    {q:`${R('じゃがいも','じゃがいも')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','長崎県','鹿児島県','茨城県'],hint:'広大な農地があります',diff:2},
+    {q:`${R('海','うみ')}に${R('面','めん')}していない${R('内陸県','ないりくけん')}はどれ？`,a:'栃木県',choices:['栃木県','千葉県','茨城県','神奈川県'],hint:'日光東照宮がある県です',diff:2},
+    {q:`${R('本州','ほんしゅう')}・${R('四国','しこく')}・${R('九州','きゅうしゅう')}にはさまれた${R('海','うみ')}は？`,a:'瀬戸内海',choices:['瀬戸内海','日本海','太平洋','東シナ海'],hint:'穏やかな海として有名です',diff:2},
+    {q:`${R('琉球王国','りゅうきゅうおうこく')}とよばれていた${R('歴史','れきし')}がある${R('都道府県','とどうふけん')}は？`,a:'沖縄県',choices:['沖縄県','鹿児島県','長崎県','熊本県'],hint:'首里城が有名です',diff:2},
+    {q:`${R('白川郷','しらかわごう')}の${R('合掌造','がっしょうづく')}りで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'岐阜県',choices:['岐阜県','富山県','石川県','長野県'],hint:'世界遺産に登録されています',diff:2},
+    {q:`${R('瀬戸大橋','せとおおはし')}でつながっている${R('県','けん')}の${R('組','くみ')}み${R('合','あ')}わせは？`,a:'岡山県と香川県',choices:['岡山県と香川県','広島県と愛媛県','山口県と大分県','兵庫県と徳島県'],hint:'本州と四国をむすびます',diff:2},
+    {q:`${R('有田焼','ありたやき')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'佐賀県',choices:['佐賀県','長崎県','福岡県','大分県'],hint:'九州にある小さな県です',diff:3},
+    {q:`${R('大分県','おおいたけん')}が${R('日本一','にほんいち')}の${R('数','かず')}を${R('誇','ほこ')}るものは？`,a:'温泉の数',choices:['温泉の数','牛の数','みかんの数','漁港の数'],hint:'別府温泉が有名です',diff:3},
+    {q:`${R('日本','にほん')}で${R('唯一','ゆいいつ')}、${R('府','ふ')}が${R('２つ','ふたつ')}ある${R('地方','ちほう')}は？`,a:'近畿地方',choices:['近畿地方','関東地方','中部地方','中国地方'],hint:'大阪府と京都府があります',diff:3},
+    {q:`${R('政令指定都市','せいれいしていとし')}が${R('３つ','みっつ')}ある${R('唯一','ゆいいつ')}の${R('都道府県','とどうふけん')}は？`,a:'神奈川県',choices:['神奈川県','大阪府','愛知県','静岡県'],hint:'横浜・川崎・相模原が含まれます',diff:3},
+    {q:`${R('日本','にほん')}の${R('都道府県','とどうふけん')}はぜんぶでいくつ？`,a:'47',choices:['47','46','48','45'],hint:'１都・１道・２府・43県',diff:3},
+    {q:`${R('本州最北端','ほんしゅうさいほくたん')}にある${R('半島','はんとう')}がある${R('県','けん')}は？`,a:'青森県',choices:['青森県','岩手県','秋田県','宮城県'],hint:'下北半島と津軽半島があります',diff:3},
+    {q:`${R('四国','しこく')}で${R('最も','もっとも')}${R('面積','めんせき')}が${R('大','おお')}きい${R('県','けん')}は？`,a:'高知県',choices:['高知県','愛媛県','徳島県','香川県'],hint:'坂本龍馬の出身地です',diff:3},
+    {q:`${R('九州地方','きゅうしゅうちほう')}で${R('最も','もっとも')}${R('面積','めんせき')}が${R('大','おお')}きい${R('県','けん')}は？`,a:'鹿児島県',choices:['鹿児島県','熊本県','大分県','宮崎県'],hint:'桜島がある県です',diff:3},
+    {q:`${R('信州','しんしゅう')}ともよばれる${R('都道府県','とどうふけん')}は？`,a:'長野県',choices:['長野県','山梨県','新潟県','富山県'],hint:'アルプス山脈がある内陸の県です',diff:2},
+    {q:`${R('北海道','ほっかいどう')}に${R('隣接','りんせつ')}する${R('都道府県','とどうふけん')}は？`,a:'青森県（津軽海峡をはさむ）',choices:['青森県（津軽海峡をはさむ）','岩手県','秋田県','山形県'],hint:'青函トンネルでつながっています',diff:3},
+
+    // ── 追加30問（別名・歴史・地形・産業・隣接・形） ──
+    // ★ やさしい
+    {q:`${R('東京','とうきょう')}タワーがある${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','神奈川県','埼玉県','千葉県'],hint:'日本の首都にあります',diff:1},
+    {q:`${R('富士山','ふじさん')}がある${R('都道府県','とどうふけん')}は？`,a:'静岡県と山梨県',choices:['静岡県と山梨県','長野県と山梨県','静岡県と長野県','神奈川県と山梨県'],hint:'２つの県にまたがっています',diff:1},
+    {q:`${R('日本','にほん')}で${R('唯一','ゆいいつ')}"${R('道','どう')}"がつく${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','東海道','山陰道','北陸道'],hint:'日本最北の都道府県です',diff:1},
+    {q:`${R('おきなわ','おきなわ')}の${R('海','うみ')}といえば${R('何','なに')}${R('色','いろ')}？`,a:'エメラルドグリーン',choices:['エメラルドグリーン','どろどろの茶色','ふかい紺色','まっしろ'],hint:'サンゴ礁がある美しい海です',diff:1},
+    {q:`${R('広島県','ひろしまけん')}の${R('名物','めいぶつ')}は？`,a:'お好み焼き',choices:['お好み焼き','たこやき','もんじゃ焼き','焼きそば'],hint:'広島風として有名です',diff:1},
+    {q:`${R('大阪府','おおさかふ')}の${R('別名','べつめい')}は？`,a:'天下の台所',choices:['天下の台所','百万都市','海の都','商人の国'],hint:'食文化と商業が栄えた場所です',diff:1},
+    {q:`${R('長崎県','ながさきけん')}にある${R('世界遺産','せかいいさん')}の${R('島','しま')}は？`,a:'軍艦島（端島）',choices:['軍艦島（端島）','屋久島','小笠原諸島','佐渡島'],hint:'廃墟となった炭鉱の島です',diff:1},
+    {q:`${R('北海道','ほっかいどう')}の${R('有名','ゆうめい')}な${R('花畑','はなばたけ')}がある${R('街','まち')}は？`,a:'富良野市',choices:['富良野市','札幌市','函館市','旭川市'],hint:'ラベンダー畑が有名です',diff:1},
+    {q:`${R('岩手県','いわてけん')}の${R('有名','ゆうめい')}な${R('麺','めん')}は？`,a:'わんこそば',choices:['わんこそば','冷麺','稲庭うどん','ひっぱりうどん'],hint:'次々とそばをつがれます',diff:1},
+    {q:`${R('京都府','きょうとふ')}の${R('有名','ゆうめい')}な${R('お寺','おてら')}は？`,a:'金閣寺',choices:['金閣寺','東大寺','善光寺','浅草寺'],hint:'金色に輝くお寺です',diff:1},
+    // ★★ ふつう
+    {q:`${R('旧国名','きゅうこくめい')}「${R('陸奥','むつ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'青森県・岩手県・宮城県・福島県',choices:['青森県・岩手県・宮城県・福島県','青森県・秋田県','岩手県・宮城県','福島県・茨城県'],hint:'東北の太平洋側エリアです',diff:2},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('薩摩','さつま')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'鹿児島県',choices:['鹿児島県','宮崎県','熊本県','大分県'],hint:'西郷隆盛の出身地です',diff:2},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('土佐','とさ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'高知県',choices:['高知県','愛媛県','徳島県','香川県'],hint:'坂本龍馬の出身地です',diff:2},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('越後','えちご')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'新潟県',choices:['新潟県','富山県','石川県','長野県'],hint:'上杉謙信の故郷です',diff:2},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('甲斐','かい')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'山梨県',choices:['山梨県','長野県','静岡県','神奈川県'],hint:'武田信玄の故郷です',diff:2},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('伊予','いよ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'愛媛県',choices:['愛媛県','高知県','徳島県','香川県'],hint:'みかんと道後温泉が有名です',diff:2},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('武蔵','むさし')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'東京都・埼玉県',choices:['東京都・埼玉県','東京都・神奈川県','埼玉県・千葉県','東京都・千葉県'],hint:'江戸があったエリアです',diff:2},
+    {q:`${R('鍋料理','なべりょうり')}「もつ鍋」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'福岡県',choices:['福岡県','熊本県','大分県','佐賀県'],hint:'博多が発祥といわれます',diff:2},
+    {q:`${R('自動車','じどうしゃ')}${R('生産','せいさん')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'愛知県',choices:['愛知県','神奈川県','静岡県','群馬県'],hint:'トヨタ自動車の本社があります',diff:2},
+    {q:`${R('日本一','にほんいち')}${R('深','ふか')}い${R('湖','みずうみ')}「田沢湖」がある${R('都道府県','とどうふけん')}は？`,a:'秋田県',choices:['秋田県','青森県','岩手県','山形県'],hint:'なまはげが有名な県です',diff:2},
+    {q:`${R('日本','にほん')}で${R('最初','さいしょ')}に${R('世界遺産','せかいいさん')}に${R('登録','とうろく')}された${R('都道府県','とどうふけん')}はどれ？`,a:'奈良県（法隆寺）',choices:['奈良県（法隆寺）','京都府（金閣寺）','広島県（厳島神社）','東京都（日光）'],hint:'1993年に登録されました',diff:2},
+    {q:`${R('日本','にほん')}の${R('都道府県','とどうふけん')}で${R('最も','もっとも')}${R('東','ひがし')}にあるのは？`,a:'北海道（択捉島）',choices:['北海道（択捉島）','東京都（南鳥島）','岩手県','青森県'],hint:'北方領土を含みます',diff:2},
+    {q:`${R('岐阜県','ぎふけん')}と${R('富山県','とやまけん')}にまたがる${R('世界遺産','せかいいさん')}は？`,a:'白川郷・五箇山の合掌造り集落',choices:['白川郷・五箇山の合掌造り集落','白神山地','屋久島','熊野古道'],hint:'雪深い山村の家々が有名です',diff:2},
+    {q:`${R('さつまいも','さつまいも')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'鹿児島県',choices:['鹿児島県','千葉県','茨城県','宮崎県'],hint:'桜島がある南の県です',diff:2},
+    {q:`${R('りんご','りんご')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'青森県',choices:['青森県','長野県','岩手県','山形県'],hint:'ねぶた祭りが有名な県です',diff:2},
+    // ★★★ むずかしい
+    {q:`${R('旧国名','きゅうこくめい')}「${R('出羽','でわ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'山形県・秋田県',choices:['山形県・秋田県','岩手県・秋田県','青森県・秋田県','山形県・宮城県'],hint:'東北地方の日本海側です',diff:3},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('遠江','とおとうみ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'静岡県（西部）',choices:['静岡県（西部）','愛知県','神奈川県','山梨県'],hint:'浜松市がある地域です',diff:3},
+    {q:`${R('都道府県','とどうふけん')}の${R('形','かたち')}が「${R('ブーツ','ブーツ')}」に${R('似','に')}ているのは？`,a:'千葉県',choices:['千葉県','神奈川県','静岡県','茨城県'],hint:'房総半島が細長く伸びています',diff:3},
+    {q:`${R('都道府県','とどうふけん')}の${R('形','かたち')}が「${R('金魚','きんぎょ')}」に${R('似','に')}ているのは？`,a:'奈良県',choices:['奈良県','滋賀県','三重県','和歌山県'],hint:'内陸にある古都の県です',diff:3},
+    {q:`${R('全国','ぜんこく')}で「${R('県','けん')}」がつかない${R('都道府県','とどうふけん')}はいくつ？`,a:'４つ（東京都・北海道・大阪府・京都府）',choices:['４つ（東京都・北海道・大阪府・京都府）','２つ','３つ','５つ'],hint:'都・道・府がつく場所です',diff:3},
+    {q:`${R('日本','にほん')}で${R('平成','へいせい')}に${R('生','う')}まれた${R('市','し')}が${R('県庁所在地','けんちょうしょざいち')}になっている${R('都道府県','とどうふけん')}は？`,a:'埼玉県（さいたま市・2001年）',choices:['埼玉県（さいたま市・2001年）','神奈川県（横浜市）','千葉県（千葉市）','大阪府（大阪市）'],hint:'複数の市が合併して誕生しました',diff:3},
+    {q:`${R('隣接','りんせつ')}する${R('都道府県','とどうふけん')}の${R('数','かず')}が${R('最も','もっとも')}${R('多','おお')}い${R('都道府県','とどうふけん')}は？`,a:'長野県（８県と隣接）',choices:['長野県（８県と隣接）','岐阜県（７県と隣接）','埼玉県（６県と隣接）','栃木県（６県と隣接）'],hint:'内陸の大きな県です',diff:3},
+  ],
+  capital:[
+    {q:`${R('北海道','ほっかいどう')}の${R('道庁所在地','どうちょうしょざいち')}は？`,a:'札幌市',choices:['札幌市','函館市','旭川市','釧路市'],hint:'雪まつりが有名な市です',diff:1},
+    {q:`${R('青森県','あおもりけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'青森市',choices:['青森市','弘前市','八戸市','十和田市'],hint:'ねぶた祭りが有名な都市です',diff:1},
+    {q:`${R('岩手県','いわてけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'盛岡市',choices:['盛岡市','花巻市','一関市','北上市'],hint:'冷麺とわんこそばが有名です',diff:2},
+    {q:`${R('宮城県','みやぎけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'仙台市',choices:['仙台市','石巻市','気仙沼市','多賀城市'],hint:'七夕まつりと牛タンが有名です',diff:1},
+    {q:`${R('秋田県','あきたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'秋田市',choices:['秋田市','横手市','大仙市','能代市'],hint:'なまはげで有名な県の中心都市です',diff:1},
+    {q:`${R('山形県','やまがたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'山形市',choices:['山形市','鶴岡市','酒田市','米沢市'],hint:'さくらんぼで有名な県の中心都市です',diff:1},
+    {q:`${R('福島県','ふくしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'福島市',choices:['福島市','郡山市','いわき市','会津若松市'],hint:'東北地方最南端の県の中心都市です',diff:1},
+    {q:`${R('茨城県','いばらきけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'水戸市',choices:['水戸市','つくば市','日立市','土浦市'],hint:'偕楽園の梅が有名な都市です',diff:2},
+    {q:`${R('栃木県','とちぎけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'宇都宮市',choices:['宇都宮市','小山市','栃木市','足利市'],hint:'餃子の消費量が日本一の都市です',diff:2},
+    {q:`${R('群馬県','ぐんまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'前橋市',choices:['前橋市','高崎市','太田市','伊勢崎市'],hint:'草津温泉がある県の県庁所在地です',diff:2},
+    {q:`${R('埼玉県','さいたまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'さいたま市',choices:['さいたま市','川越市','川口市','越谷市'],hint:'2001年に誕生した政令指定都市です',diff:2},
+    {q:`${R('千葉県','ちばけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'千葉市',choices:['千葉市','船橋市','松戸市','柏市'],hint:'県名と同じ名前の都市です',diff:1},
+    {q:`${R('東京都','とうきょうと')}の${R('都庁','とちょう')}がある${R('区','く')}は？`,a:'新宿区',choices:['新宿区','千代田区','渋谷区','港区'],hint:'都庁ビルがある場所です',diff:3},
+    {q:`${R('神奈川県','かながわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'横浜市',choices:['横浜市','川崎市','相模原市','横須賀市'],hint:'中華街が有名な都市です',diff:1},
+    {q:`${R('新潟県','にいがたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'新潟市',choices:['新潟市','長岡市','上越市','三条市'],hint:'日本海側最大の都市です',diff:2},
+    {q:`${R('富山県','とやまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'富山市',choices:['富山市','高岡市','射水市','南砺市'],hint:'薬売りで有名な県の中心都市です',diff:2},
+    {q:`${R('石川県','いしかわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'金沢市',choices:['金沢市','七尾市','小松市','白山市'],hint:'兼六園が有名な都市です',diff:1},
+    {q:`${R('福井県','ふくいけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'福井市',choices:['福井市','敦賀市','小浜市','越前市'],hint:'恐竜博物館に近い都市です',diff:2},
+    {q:`${R('山梨県','やまなしけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'甲府市',choices:['甲府市','富士吉田市','都留市','大月市'],hint:'武田信玄ゆかりの都市です',diff:2},
+    {q:`${R('長野県','ながのけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'長野市',choices:['長野市','松本市','上田市','飯田市'],hint:'善光寺がある都市です',diff:2},
+    {q:`${R('岐阜県','ぎふけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'岐阜市',choices:['岐阜市','大垣市','高山市','各務原市'],hint:'鵜飼いが有名な都市です',diff:2},
+    {q:`${R('静岡県','しずおかけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'静岡市',choices:['静岡市','浜松市','沼津市','富士市'],hint:'お茶とみかんで有名な都市です',diff:1},
+    {q:`${R('愛知県','あいちけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'名古屋市',choices:['名古屋市','豊田市','岡崎市','一宮市'],hint:'名古屋城がある都市です',diff:1},
+    {q:`${R('三重県','みえけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'津市',choices:['津市','四日市市','鈴鹿市','松阪市'],hint:'日本一短い地名の県庁所在地です',diff:3},
+    {q:`${R('滋賀県','しがけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'大津市',choices:['大津市','草津市','彦根市','近江八幡市'],hint:'琵琶湖のほとりにある都市です',diff:2},
+    {q:`${R('京都府','きょうとふ')}の${R('府庁所在地','ふちょうしょざいち')}は？`,a:'京都市',choices:['京都市','宇治市','亀岡市','長岡京市'],hint:'千年の都がある都市です',diff:1},
+    {q:`${R('大阪府','おおさかふ')}の${R('府庁所在地','ふちょうしょざいち')}は？`,a:'大阪市',choices:['大阪市','堺市','枚方市','高槻市'],hint:'道頓堀がある都市です',diff:1},
+    {q:`${R('兵庫県','ひょうごけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'神戸市',choices:['神戸市','姫路市','西宮市','尼崎市'],hint:'港町として有名な都市です',diff:1},
+    {q:`${R('奈良県','ならけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'奈良市',choices:['奈良市','橿原市','大和高田市','桜井市'],hint:'東大寺・春日大社がある都市です',diff:1},
+    {q:`${R('和歌山県','わかやまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'和歌山市',choices:['和歌山市','田辺市','新宮市','橋本市'],hint:'和歌山城がある都市です',diff:2},
+    {q:`${R('鳥取県','とっとりけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'鳥取市',choices:['鳥取市','米子市','倉吉市','境港市'],hint:'砂丘に近い都市です',diff:2},
+    {q:`${R('島根県','しまねけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'松江市',choices:['松江市','出雲市','浜田市','益田市'],hint:'宍道湖のそばにある都市です',diff:2},
+    {q:`${R('岡山県','おかやまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'岡山市',choices:['岡山市','倉敷市','津山市','笠岡市'],hint:'後楽園がある都市です',diff:1},
+    {q:`${R('広島県','ひろしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'広島市',choices:['広島市','福山市','呉市','尾道市'],hint:'平和記念公園がある都市です',diff:1},
+    {q:`${R('山口県','やまぐちけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'山口市',choices:['山口市','下関市','防府市','宇部市'],hint:'県名と同じ名前の都市です',diff:2},
+    {q:`${R('徳島県','とくしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'徳島市',choices:['徳島市','鳴門市','阿南市','吉野川市'],hint:'阿波おどりが有名な都市です',diff:2},
+    {q:`${R('香川県','かがわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'高松市',choices:['高松市','丸亀市','坂出市','善通寺市'],hint:'うどんの聖地にある都市です',diff:1},
+    {q:`${R('愛媛県','えひめけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'松山市',choices:['松山市','今治市','新居浜市','宇和島市'],hint:'道後温泉がある都市です',diff:1},
+    {q:`${R('高知県','こうちけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'高知市',choices:['高知市','南国市','四万十市','香南市'],hint:'坂本龍馬ゆかりの都市です',diff:1},
+    {q:`${R('福岡県','ふくおかけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'福岡市',choices:['福岡市','北九州市','久留米市','飯塚市'],hint:'博多ラーメンが有名な都市です',diff:1},
+    {q:`${R('佐賀県','さがけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'佐賀市',choices:['佐賀市','唐津市','鳥栖市','武雄市'],hint:'有田焼の近くにある都市です',diff:2},
+    {q:`${R('長崎県','ながさきけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'長崎市',choices:['長崎市','佐世保市','諫早市','大村市'],hint:'坂の町と出島が有名です',diff:1},
+    {q:`${R('熊本県','くまもとけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'熊本市',choices:['熊本市','八代市','天草市','玉名市'],hint:'くまモンのいる都市です',diff:1},
+    {q:`${R('大分県','おおいたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'大分市',choices:['大分市','別府市','中津市','佐伯市'],hint:'温泉の数が日本一の県の中心都市です',diff:2},
+    {q:`${R('宮崎県','みやざきけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'宮崎市',choices:['宮崎市','都城市','延岡市','日南市'],hint:'マンゴーの産地で有名な県の中心都市',diff:2},
+    {q:`${R('鹿児島県','かごしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'鹿児島市',choices:['鹿児島市','霧島市','薩摩川内市','姶良市'],hint:'桜島がすぐそばにある都市です',diff:1},
+    {q:`${R('沖縄県','おきなわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'那覇市',choices:['那覇市','宜野湾市','沖縄市','浦添市'],hint:'首里城がある都市です',diff:1},
+  ],
+  region:[
+    {q:`${R('日本','にほん')}は${R('全部','ぜんぶ')}で${R('何','いく')}つの${R('地方','ちほう')}に${R('分','わ')}かれている？`,a:'８地方',choices:['８地方','６地方','７地方','９地方'],hint:'北から北海道・東北・関東…',diff:1},
+    {q:`${R('北海道','ほっかいどう')}は${R('何地方','なにちほう')}？`,a:'北海道地方',choices:['北海道地方','東北地方','関東地方','中部地方'],hint:'単独で１つの地方を形成しています',diff:1},
+    {q:`${R('東北地方','とうほくちほう')}の${R('県','けん')}はいくつ？`,a:'６つ',choices:['６つ','５つ','７つ','４つ'],hint:'青森・岩手・宮城・秋田・山形・福島',diff:1},
+    {q:`${R('関東地方','かんとうちほう')}は${R('何都道府県','なんとどうふけん')}？`,a:'１都６県',choices:['１都６県','１都４県','２府５県','１道２府４県'],hint:'東京都と６つの県があります',diff:1},
+    {q:`${R('四国地方','しこくちほう')}の${R('県','けん')}はいくつ？`,a:'４つ',choices:['４つ','３つ','５つ','６つ'],hint:'高知・愛媛・徳島・香川',diff:1},
+    {q:`${R('中国地方','ちゅうごくちほう')}の${R('都道府県','とどうふけん')}はいくつ？`,a:'５つ',choices:['５つ','４つ','６つ','３つ'],hint:'鳥取・島根・岡山・広島・山口',diff:1},
+    {q:`${R('九州地方','きゅうしゅうちほう')}の${R('都道府県','とどうふけん')}はいくつ？`,a:'８つ（沖縄含む）',choices:['８つ（沖縄含む）','７つ','６つ','９つ'],hint:'沖縄を含めると８つです',diff:1},
+    {q:`${R('近畿地方','きんきちほう')}の${R('別名','べつめい')}は？`,a:'関西',choices:['関西','関東','中部','北陸'],hint:'大阪・京都・兵庫などの地域です',diff:1},
+    {q:`${R('関東地方','かんとうちほう')}に${R('含','ふく')}まれない${R('都道府県','とどうふけん')}はどれ？`,a:'静岡県',choices:['静岡県','茨城県','栃木県','群馬県'],hint:'中部地方に属する県です',diff:2},
+    {q:`${R('近畿地方','きんきちほう')}の${R('府','ふ')}はいくつ？`,a:'２府',choices:['２府','１府','３府','４府'],hint:'大阪府と京都府です',diff:2},
+    {q:`${R('東北地方','とうほくちほう')}でもっとも${R('南','みなみ')}にある${R('県','けん')}は？`,a:'福島県',choices:['福島県','宮城県','山形県','岩手県'],hint:'関東地方のすぐ北にあります',diff:2},
+    {q:`${R('中部地方','ちゅうぶちほう')}にある${R('都道府県','とどうふけん')}はいくつ？`,a:'９つ',choices:['９つ','７つ','８つ','６つ'],hint:'愛知・岐阜・静岡・長野・山梨・新潟・富山・石川・福井',diff:2},
+    {q:`${R('北陸地方','ほくりくちほう')}に${R('含','ふく')}まれる${R('県','けん')}はどれ？`,a:'富山県',choices:['富山県','岐阜県','長野県','山梨県'],hint:'日本海側にある県です',diff:2},
+    {q:`${R('中国地方','ちゅうごくちほう')}にある${R('県','けん')}はどれ？`,a:'島根県',choices:['島根県','兵庫県','香川県','大分県'],hint:'出雲大社がある県です',diff:2},
+    {q:`${R('甲信越地方','こうしんえつちほう')}の「甲」は${R('何県','なにけん')}？`,a:'山梨県',choices:['山梨県','長野県','新潟県','群馬県'],hint:'「甲州」ともよばれる県です',diff:3},
+    {q:`${R('甲信越地方','こうしんえつちほう')}の「信」は${R('何県','なにけん')}？`,a:'長野県',choices:['長野県','山梨県','新潟県','埼玉県'],hint:'「信州」ともよばれる県です',diff:3},
+    {q:`${R('甲信越地方','こうしんえつちほう')}の「越」は${R('何県','なにけん')}？`,a:'新潟県',choices:['新潟県','富山県','石川県','群馬県'],hint:'「越後」ともよばれる県です',diff:3},
+    {q:`${R('中部地方','ちゅうぶちほう')}に${R('含','ふく')}まれない${R('県','けん')}はどれ？`,a:'滋賀県',choices:['滋賀県','長野県','山梨県','静岡県'],hint:'近畿地方に属する県です',diff:3},
+    {q:`${R('近畿地方','きんきちほう')}に${R('含','ふく')}まれない${R('県','けん')}はどれ？`,a:'岡山県',choices:['岡山県','滋賀県','奈良県','和歌山県'],hint:'中国地方に属する県です',diff:3},
+    {q:`${R('首都圏','しゅとけん')}に${R('含','ふく')}まれる${R('都道府県','とどうふけん')}はいくつ？`,a:'１都３県',choices:['１都３県','１都６県','１都２県','２都３県'],hint:'東京・神奈川・千葉・埼玉',diff:3},
+  ],
+  mountain:[
+    {q:`${R('日本','にほん')}でいちばん${R('高','たか')}い${R('山','やま')}は？`,a:'富士山（3776m）',choices:['富士山（3776m）','北岳（3193m）','奥穂高岳（3190m）','槍ヶ岳（3180m）'],hint:'静岡・山梨の県境にあります',diff:1},
+    {q:`${R('富士山','ふじさん')}の${R('高','たか')}さはおよそ？`,a:'3776m',choices:['3776m','3193m','3067m','3180m'],hint:'日本一高い山です',diff:1},
+    {q:`${R('富士山','ふじさん')}は${R('何県','なにけん')}と${R('何県','なにけん')}の${R('境','さかい')}にある？`,a:'静岡県と山梨県',choices:['静岡県と山梨県','神奈川県と山梨県','静岡県と長野県','山梨県と長野県'],hint:'どちらの県にも登山口があります',diff:1},
+    {q:`${R('日本','にほん')}で２${R('番目','ばんめ')}に${R('高','たか')}い${R('山','やま')}は？`,a:'北岳',choices:['北岳','奥穂高岳','間ノ岳','槍ヶ岳'],hint:'山梨県にあります',diff:2},
+    {q:`${R('日本','にほん')}で３${R('番目','ばんめ')}に${R('高','たか')}い${R('山','やま')}は？`,a:'奥穂高岳',choices:['奥穂高岳','間ノ岳','槍ヶ岳','大喰岳'],hint:'長野・岐阜の県境にあります',diff:3},
+    {q:`${R('北海道','ほっかいどう')}でいちばん${R('高','たか')}い${R('山','やま')}は？`,a:'大雪山（旭岳）',choices:['大雪山（旭岳）','羊蹄山','十勝岳','利尻岳'],hint:'「北海道の屋根」ともよばれます',diff:2},
+    {q:`${R('阿蘇山','あそさん')}がある${R('県','けん')}は？`,a:'熊本県',choices:['熊本県','大分県','宮崎県','鹿児島県'],hint:'世界最大級のカルデラを持つ山です',diff:1},
+    {q:`${R('桜島','さくらじま')}がある${R('県','けん')}は？`,a:'鹿児島県',choices:['鹿児島県','宮崎県','熊本県','大分県'],hint:'今も活発に噴火しています',diff:1},
+    {q:`${R('浅間山','あさまやま')}がある${R('都道府県','とどうふけん')}は？`,a:'長野県・群馬県',choices:['長野県・群馬県','静岡県・山梨県','岐阜県・長野県','新潟県・長野県'],hint:'活火山として有名です',diff:2},
+    {q:`${R('三霊山','さんれいざん')}にあてはまる${R('組','くみ')}み${R('合','あ')}わせはどれ？`,a:'富士山・白山・立山',choices:['富士山・白山・立山','富士山・御嶽山・阿蘇山','富士山・槍ヶ岳・北岳','大雪山・富士山・阿蘇山'],hint:'古くから信仰の対象になった山々です',diff:2},
+    {q:`${R('立山','たてやま')}がある${R('都道府県','とどうふけん')}は？`,a:'富山県',choices:['富山県','長野県','石川県','新潟県'],hint:'北アルプスにある山です',diff:2},
+    {q:`${R('白山','はくさん')}がある${R('都道府県','とどうふけん')}は？`,a:'石川県・岐阜県',choices:['石川県・岐阜県','富山県・長野県','新潟県・富山県','福井県・石川県'],hint:'三霊山のひとつです',diff:3},
+    {q:`${R('高尾山','たかおさん')}がある${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','神奈川県','埼玉県','山梨県'],hint:'年間登山者数が世界一ともいわれます',diff:1},
+    {q:`${R('九州','きゅうしゅう')}でいちばん${R('高','たか')}い${R('山','やま')}は？`,a:'久住山',choices:['久住山','阿蘇山','桜島','霧島山'],hint:'大分県にある山です',diff:3},
+    {q:`${R('大山','だいせん')}がある${R('県','けん')}は？`,a:'鳥取県',choices:['鳥取県','島根県','岡山県','広島県'],hint:'中国地方最高峰です',diff:2},
+    {q:`${R('磐梯山','ばんだいさん')}がある${R('県','けん')}は？`,a:'福島県',choices:['福島県','山形県','宮城県','岩手県'],hint:'会津地方を代表する山です',diff:2},
+    {q:`${R('富士山','ふじさん')}が${R('世界遺産','せかいいさん')}に${R('登録','とうろく')}された${R('年','ねん')}は？`,a:'2013年',choices:['2013年','2011年','2015年','2009年'],hint:'文化遺産として登録されました',diff:3},
+    {q:`${R('富士山','ふじさん')}が${R('最後','さいご')}に${R('噴火','ふんか')}したのは${R('何年','なんねん')}？`,a:'1707年（宝永の噴火）',choices:['1707年（宝永の噴火）','1850年','1600年','1900年'],hint:'今も活火山に分類されます',diff:3},
+    {q:`${R('日本百名山','にほんひゃくめいざん')}を${R('選','えら')}んだ${R('人','ひと')}は？`,a:'深田久弥',choices:['深田久弥','松尾芭蕉','伊能忠敬','吉田松陰'],hint:'登山家・作家です',diff:3},
+    {q:`${R('岩手山','いわてさん')}の${R('別名','べつめい')}は？`,a:'南部片富士',choices:['南部片富士','奥の富士','岩手富士','東北富士'],hint:'形が富士山に似ています',diff:3},
+  ],
+  river:[
+    {q:`${R('日本','にほん')}でいちばん${R('長','なが')}い${R('川','かわ')}は？`,a:'信濃川',choices:['信濃川','利根川','石狩川','木曽川'],hint:'367kmで日本最長です',diff:1},
+    {q:`${R('日本','にほん')}でいちばん${R('流域面積','りゅういきめんせき')}が${R('広','ひろ')}い${R('川','かわ')}は？`,a:'利根川',choices:['利根川','信濃川','淀川','北上川'],hint:'「坂東太郎」ともよばれます',diff:1},
+    {q:`${R('信濃川','しなのがわ')}は${R('長野県','ながのけん')}では${R('何川','なにがわ')}とよばれる？`,a:'千曲川',choices:['千曲川','犀川','天竜川','木曽川'],hint:'長野県内では名前が変わります',diff:2},
+    {q:`「${R('坂東太郎','ばんどうたろう')}」とよばれる${R('川','かわ')}は？`,a:'利根川',choices:['利根川','信濃川','最上川','北上川'],hint:'関東平野を流れます',diff:1},
+    {q:`「${R('筑紫次郎','ちくしじろう')}」とよばれる${R('川','かわ')}は？`,a:'筑後川',choices:['筑後川','球磨川','大淀川','江の川'],hint:'九州最大の川です',diff:2},
+    {q:`「${R('四国三郎','しこくさぶろう')}」とよばれる${R('川','かわ')}は？`,a:'吉野川',choices:['吉野川','四万十川','仁淀川','物部川'],hint:'徳島県を流れる大きな川です',diff:2},
+    {q:`${R('四万十川','しまんとがわ')}がある${R('都道府県','とどうふけん')}は？`,a:'高知県',choices:['高知県','徳島県','愛媛県','香川県'],hint:'「最後の清流」ともよばれます',diff:1},
+    {q:`${R('淀川','よどがわ')}の${R('源流','げんりゅう')}はどこ？`,a:'琵琶湖',choices:['琵琶湖','諏訪湖','霞ヶ浦','浜名湖'],hint:'日本最大の湖から流れ出します',diff:1},
+    {q:`${R('最上川','もがみがわ')}がある${R('都道府県','とどうふけん')}は？`,a:'山形県',choices:['山形県','秋田県','宮城県','福島県'],hint:'松尾芭蕉が句を詠んだ川です',diff:1},
+    {q:`${R('最上川','もがみがわ')}の${R('俳句','はいく')}の${R('作者','さくしゃ')}は？`,a:'松尾芭蕉',choices:['松尾芭蕉','小林一茶','与謝蕪村','正岡子規'],hint:'「奥の細道」を書いた人物です',diff:2},
+    {q:`${R('天竜川','てんりゅうがわ')}の${R('源流','げんりゅう')}はどこ？`,a:'諏訪湖',choices:['諏訪湖','琵琶湖','霞ヶ浦','浜名湖'],hint:'長野県にある湖です',diff:2},
+    {q:`${R('日本','にほん')}で${R('最も','もっとも')}${R('短','みじか')}い${R('川','かわ')}は？`,a:'ぶつぶつ川（和歌山県・約13m）',choices:['ぶつぶつ川（和歌山県・約13m）','銀山川（広島県）','あいの川（石川県）','乙女川（奈良県）'],hint:'全長約13.5mです',diff:3},
+    {q:`${R('石狩川','いしかりがわ')}がある${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','青森県','岩手県','秋田県'],hint:'北海道を代表する川です',diff:1},
+    {q:`${R('球磨川','くまがわ')}がある${R('県','けん')}は？`,a:'熊本県',choices:['熊本県','大分県','宮崎県','鹿児島県'],hint:'「九州三郎」ともよばれます',diff:2},
+    {q:`${R('長良川','ながらがわ')}の${R('鵜飼','うかい')}で${R('有名','ゆうめい')}な${R('県','けん')}は？`,a:'岐阜県',choices:['岐阜県','愛知県','三重県','滋賀県'],hint:'ウが魚を捕まえる伝統漁法です',diff:2},
+    {q:`${R('北上川','きたかみがわ')}は${R('何県','なにけん')}にある？`,a:'岩手県・宮城県',choices:['岩手県・宮城県','青森県・岩手県','秋田県・山形県','宮城県・福島県'],hint:'東北地方を流れる大きな川です',diff:2},
+    {q:`${R('富士川','ふじかわ')}がある${R('都道府県','とどうふけん')}は？`,a:'山梨県・静岡県',choices:['山梨県・静岡県','長野県・静岡県','山梨県・神奈川県','岐阜県・静岡県'],hint:'日本三大急流のひとつです',diff:3},
+    {q:`${R('日本三大急流','にほんさんだいきゅうりゅう')}にあてはまる${R('川','かわ')}はどれ？`,a:'富士川・最上川・球磨川',choices:['富士川・最上川・球磨川','信濃川・利根川・石狩川','天竜川・木曽川・吉野川','阿武隈川・北上川・江の川'],hint:'どれも流れが速い川です',diff:3},
+    {q:`${R('木曽川','きそがわ')}が${R('流','なが')}れる${R('都道府県','とどうふけん')}は？`,a:'長野県・岐阜県・愛知県・三重県',choices:['長野県・岐阜県・愛知県・三重県','静岡県・長野県・岐阜県','山梨県・静岡県・愛知県','新潟県・長野県・岐阜県'],hint:'木曽山脈に源流があります',diff:3},
+    {q:`${R('荒川','あらかわ')}が${R('流','なが')}れる${R('都道府県','とどうふけん')}は？`,a:'埼玉県・東京都',choices:['埼玉県・東京都','神奈川県・東京都','群馬県・埼玉県','茨城県・千葉県'],hint:'東京の東部を流れています',diff:2},
+  ],
+  island:[
+    {q:`${R('日本','にほん')}でいちばん${R('大','おお')}きい${R('島','しま')}は？`,a:'本州',choices:['本州','北海道','九州','四国'],hint:'東京・大阪・名古屋がある島です',diff:1},
+    {q:`${R('日本','にほん')}で２${R('番目','ばんめ')}に${R('大','おお')}きい${R('島','しま')}は？`,a:'北海道',choices:['北海道','九州','四国','沖縄島'],hint:'日本最北の都道府県です',diff:1},
+    {q:`${R('日本','にほん')}でいちばん${R('大','おお')}きい${R('半島','はんとう')}は？`,a:'紀伊半島',choices:['紀伊半島','知床半島','下北半島','房総半島'],hint:'近畿地方の南に突き出ています',diff:1},
+    {q:`${R('屋久島','やくしま')}がある${R('都道府県','とどうふけん')}は？`,a:'鹿児島県',choices:['鹿児島県','宮崎県','熊本県','長崎県'],hint:'縄文杉がある世界遺産の島です',diff:1},
+    {q:`${R('小笠原諸島','おがさわらしょとう')}がある${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','神奈川県','千葉県','静岡県'],hint:'東京から船で約24時間かかります',diff:2},
+    {q:`${R('佐渡島','さどがしま')}がある${R('都道府県','とどうふけん')}は？`,a:'新潟県',choices:['新潟県','秋田県','山形県','石川県'],hint:'トキの保護で有名な島です',diff:1},
+    {q:`${R('淡路島','あわじしま')}がある${R('都道府県','とどうふけん')}は？`,a:'兵庫県',choices:['兵庫県','大阪府','徳島県','和歌山県'],hint:'たまねぎが有名な島です',diff:1},
+    {q:`${R('種子島','たねがしま')}がある${R('都道府県','とどうふけん')}は？`,a:'鹿児島県',choices:['鹿児島県','宮崎県','長崎県','熊本県'],hint:'ロケット発射場がある島です',diff:1},
+    {q:`${R('知床半島','しれとこはんとう')}がある${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','岩手県','青森県','秋田県'],hint:'世界自然遺産に登録されています',diff:1},
+    {q:`${R('奄美大島','あまみおおしま')}がある${R('都道府県','とどうふけん')}は？`,a:'鹿児島県',choices:['鹿児島県','沖縄県','熊本県','宮崎県'],hint:'世界自然遺産に登録されています',diff:2},
+    {q:`${R('対馬','つしま')}がある${R('都道府県','とどうふけん')}は？`,a:'長崎県',choices:['長崎県','佐賀県','福岡県','大分県'],hint:'朝鮮半島に最も近い日本の島です',diff:2},
+    {q:`${R('能登半島','のとはんとう')}がある${R('県','けん')}は？`,a:'石川県',choices:['石川県','富山県','新潟県','福井県'],hint:'日本海に突き出た半島です',diff:2},
+    {q:`${R('下北半島','しもきたはんとう')}がある${R('県','けん')}は？`,a:'青森県',choices:['青森県','岩手県','秋田県','山形県'],hint:'本州最北端にある半島です',diff:2},
+    {q:`${R('五島列島','ごとうれっとう')}がある${R('都道府県','とどうふけん')}は？`,a:'長崎県',choices:['長崎県','佐賀県','熊本県','鹿児島県'],hint:'美しい海と教会が有名です',diff:2},
+    {q:`${R('日本','にほん')}の${R('最南端','さいなんたん')}の${R('島','しま')}は？`,a:'沖ノ鳥島（東京都）',choices:['沖ノ鳥島（東京都）','与那国島（沖縄県）','南鳥島（東京都）','波照間島（沖縄県）'],hint:'東京都に属する島です',diff:3},
+    {q:`${R('日本','にほん')}の${R('最西端','さいせいたん')}の${R('島','しま')}は？`,a:'与那国島（沖縄県）',choices:['与那国島（沖縄県）','沖ノ鳥島（東京都）','対馬（長崎県）','宮古島（沖縄県）'],hint:'台湾に近い島です',diff:3},
+    {q:`${R('日本','にほん')}の${R('最東端','さいとうたん')}の${R('島','しま')}は？`,a:'南鳥島（東京都）',choices:['南鳥島（東京都）','沖ノ鳥島（東京都）','父島（東京都）','択捉島'],hint:'東京都に属する島です',diff:3},
+    {q:`${R('択捉島','えとろふとう')}などは${R('何','なん')}とよばれる？`,a:'北方領土',choices:['北方領土','千島列島','南千島','クリル諸島'],hint:'ロシアが占拠している日本の領土です',diff:2},
+    {q:`${R('伊豆大島','いずおおしま')}がある${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','神奈川県','静岡県','千葉県'],hint:'三原山がある島です',diff:2},
+    {q:`${R('淡路島','あわじしま')}は${R('日本','にほん')}で${R('何番目','なんばんめ')}に${R('大','おお')}きい${R('島','しま')}？`,a:'7番目',choices:['7番目','3番目','5番目','10番目'],hint:'瀬戸内海最大の島です',diff:3},
+  ],
+};
+
+// =====================================================
+// 状態
+// =====================================================
+let selectedCats = ['pref'];
+let quizCount = 10;
+let quizQuestions = [];
+let currentIdx = 0;
+let score = 0, streak = 0, maxStreak = 0;
+let answered = false;
+let timerInterval = null, timerLeft = 15;
+let history = [];
+let furiganaOn = true;
+let isReviewMode = false;   // 復習モードフラグ
+let wrongBank = [];         // 間違い問題ストック（localStorage永続）
+
+// =====================================================
+// 初期化
+// =====================================================
+function init() {
+  renderCategories();
+  renderRankCatTabs();
+  renderAllBadges();
+  loadWrongBank();
+}
+
+function selectCount(n, btn) {
+  quizCount = n;
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function applyFurigana() {
+  furiganaOn = document.getElementById('furigana-toggle').checked;
+  document.body.classList.toggle('no-furigana', !furiganaOn);
+}
+
+// =====================================================
+// カテゴリ
+// =====================================================
+function renderCategories() {
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const count = QUESTIONS[cat.id].length;
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (cat.id==='pref' ? ' selected' : '');
+    btn.dataset.id = cat.id;
+    btn.innerHTML = `<span class="cat-icon">${cat.icon}</span><span class="cat-name">${cat.name}</span><span class="cat-count">${count}もん</span>`;
+    btn.onclick = () => toggleCat(cat.id, btn);
+    grid.appendChild(btn);
+  });
+}
+function toggleCat(id, btn) {
+  if (selectedCats.includes(id)) {
+    selectedCats = selectedCats.filter(c => c!==id);
+    btn.classList.remove('selected');
+  } else {
+    selectedCats.push(id);
+    btn.classList.add('selected');
+  }
+  document.getElementById('start-btn').disabled = selectedCats.length===0;
+}
+
+// =====================================================
+// クイズ開始
+// =====================================================
+function startQuiz() {
+  isReviewMode = false;
+  currentIdx=0; score=0; streak=0; maxStreak=0; history=[];
+  let pool=[];
+  selectedCats.forEach(id => QUESTIONS[id].forEach(q => pool.push({...q,cat:id})));
+  pool=shuffle(pool);
+  const n = quizCount===0 ? pool.length : Math.min(quizCount,pool.length);
+  quizQuestions = pool.slice(0,n);
+  document.getElementById('review-mode-banner').style.display='none';
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+// =====================================================
+// 4択クイズ
+// =====================================================
+const TIMER_FOUR = 15;
+function renderQuestion() {
+  answered=false;
+  const q=quizQuestions[currentIdx], total=quizQuestions.length;
+  document.getElementById('q-counter').textContent=`${currentIdx+1} / ${total}`;
+  document.getElementById('progress-bar').style.width=`${(currentIdx/total)*100}%`;
+  document.getElementById('score-live').textContent=`⭐ ${score}`;
+  const cat=CATEGORIES.find(c=>c.id===q.cat);
+  document.getElementById('q-tag').textContent=cat?`${cat.icon} ${cat.name}`:'';
+  const diffEl=document.getElementById('diff-badge');
+  if(q.diff===1){diffEl.className='diff-badge diff-easy';diffEl.textContent='★ やさしい';}
+  else if(q.diff===2){diffEl.className='diff-badge diff-mid';diffEl.textContent='★★ ふつう';}
+  else{diffEl.className='diff-badge diff-hard';diffEl.textContent='★★★ むずかしい';}
+  const qText=document.getElementById('q-text');
+  qText.innerHTML=q.q;
+  applyFuriganaTo(qText);
+  document.getElementById('q-hint').textContent=q.hint?`💡 ヒント：${q.hint}`:'';
+  const letters=['Ａ','Ｂ','Ｃ','Ｄ'];
+  const choicesEl=document.getElementById('choices');
+  choicesEl.innerHTML='';
+  const shuffled=shuffle([...q.choices]);
+  shuffled.forEach((c,i)=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.innerHTML=`<span class="choice-letter">${letters[i]}</span>${c}`;
+    btn.onclick=()=>selectAnswer(c,q.a);
+    choicesEl.appendChild(btn);
+  });
+  document.getElementById('feedback-bar').className='feedback-bar';
+  document.getElementById('next-btn').classList.remove('show');
+  updateStreakBadge();
+  startTimer();
+}
+
+function selectAnswer(chosen,correct) {
+  if(answered)return; answered=true;
+  clearInterval(timerInterval);
+  const ok=chosen===correct;
+  updateScore(ok);
+  document.querySelectorAll('.choice-btn').forEach(btn=>{
+    btn.disabled=true;
+    const txt=btn.textContent.replace(/^[ＡＢＣＤ]/,'').trim();
+    if(txt===correct)btn.classList.add('correct');
+    else if(txt===chosen)btn.classList.add('wrong');
+  });
+  document.getElementById('score-live').textContent=`⭐ ${score}`;
+  showFeedback(ok,ok?'🎉 せいかい！':`❌ こたえは「${correct}」でした`);
+  document.getElementById('next-btn').classList.add('show');
+  const q=quizQuestions[currentIdx];
+  const tmp=document.createElement('div'); tmp.innerHTML=q.q;
+  history.push({q:tmp.textContent,correct,chosen,ok,qObj:q});
+  if(!ok) addToWrongBank(q);
+  // 音・アニメーション
+  if(ok){ playSound('correct'); showFlash(true); spawnParticles(); }
+  else  { playSound('wrong');   showFlash(false); shakeCard(); }
+}
+
+function nextQuestion() { currentIdx++; if(currentIdx>=quizQuestions.length)showResult(); else renderQuestion(); }
+
+// =====================================================
+// タイマー
+// =====================================================
+function startTimer() {
+  clearInterval(timerInterval);
+  timerLeft = TIMER_FOUR;
+  updateTimerUI();
+  timerInterval=setInterval(()=>{
+    timerLeft=Math.max(0,timerLeft-0.1);
+    updateTimerUI();
+    if(timerLeft<=0){ clearInterval(timerInterval); if(!answered)fourTimeUp(); }
+  },100);
+}
+function updateTimerUI() {
+  const fill=document.getElementById('timer-fill');
+  fill.style.width=(timerLeft/TIMER_FOUR*100)+'%';
+  fill.className='timer-fill'+(timerLeft<=4?' hurry':'');
+  document.getElementById('timer-num').textContent=Math.ceil(timerLeft);
+}
+function fourTimeUp() {
+  answered=true;
+  const q=quizQuestions[currentIdx];
+  streak=0; updateStreakBadge();
+  document.querySelectorAll('.choice-btn').forEach(btn=>{
+    btn.disabled=true;
+    if(btn.textContent.includes(q.a))btn.classList.add('correct');
+  });
+  playSound('timeout'); showFlash(false); shakeCard(); showFeedback(false,`⏰ じかんぎれ！こたえは「${q.a}」でした`);
+  document.getElementById('next-btn').classList.add('show');
+  const tmp=document.createElement('div'); tmp.innerHTML=q.q;
+  history.push({q:tmp.textContent,correct:q.a,chosen:null,ok:false,qObj:q});
+  addToWrongBank(q);
+}
+
+// =====================================================
+// 共通ヘルパー
+// =====================================================
+function updateScore(ok) {
+  if(ok){score++;streak++;if(streak>maxStreak)maxStreak=streak;}
+  else{streak=0;}
+}
+function updateStreakBadge() {
+  const badge=document.getElementById('streak-badge');
+  if(streak>=2){badge.classList.add('show');document.getElementById('streak-num').textContent=streak;}
+  else badge.classList.remove('show');
+}
+function showFeedback(ok,msg) {
+  const bar=document.getElementById('feedback-bar');
+  bar.className='feedback-bar show '+(ok?'ok':'ng');
+  document.getElementById('fb-text').textContent=msg;
+}
+function applyFuriganaTo(el) {
+  if(!furiganaOn) el.querySelectorAll('rt').forEach(rt=>rt.style.display='none');
+  else el.querySelectorAll('rt').forEach(rt=>rt.style.display='');
+}
+
+
+// =====================================================
+// バッジ定義
+// =====================================================
+const BADGES = [
+  // 初回系
+  { id:'first',    icon:'🌱', name:'はじめの一歩',   desc:'はじめてクイズをクリア',         check:(r)=>r.total>=1 },
+  { id:'perfect',  icon:'🏆', name:'かんぺき',        desc:'ぜんもんせいかい',               check:(r)=>r.rate===100 },
+  { id:'streak3',  icon:'🔥', name:'３れんぞく',       desc:'３もんれんぞくせいかい',         check:(r)=>r.maxStreak>=3 },
+  { id:'streak5',  icon:'⚡', name:'５れんぞく',       desc:'５もんれんぞくせいかい',         check:(r)=>r.maxStreak>=5 },
+  { id:'streak10', icon:'🌟', name:'１０れんぞく',      desc:'１０もんれんぞくせいかい',       check:(r)=>r.maxStreak>=10 },
+  // 問題数系
+  { id:'q50',      icon:'📚', name:'50もんクリア',     desc:'ごうけい50もんといた',           check:(_,t)=>t.totalQ>=50 },
+  { id:'q200',     icon:'📖', name:'200もんクリア',    desc:'ごうけい200もんといた',          check:(_,t)=>t.totalQ>=200 },
+  { id:'q500',     icon:'🎓', name:'500もんクリア',    desc:'ごうけい500もんといた',          check:(_,t)=>t.totalQ>=500 },
+  // 正解率系
+  { id:'rate80',   icon:'😊', name:'優秀賞',           desc:'せいかいりつ80%以上',            check:(r)=>r.rate>=80 },
+  { id:'rate100x3',icon:'👑', name:'パーフェクト３回',  desc:'ぜんもんせいかいを３回達成',     check:(_,t)=>t.perfectCount>=3 },
+  // カテゴリ制覇系
+  { id:'allcat',   icon:'🗺️', name:'ちりはかせ',       desc:'ぜんカテゴリでクリア',           check:(_,t)=>Object.keys(t.catDone||{}).length>=6 },
+  { id:'capital47',icon:'🏙️', name:'県庁所在地マスター',desc:'県庁所在地47問すべてを正解',    check:(_,t)=>(t.capitalCorrect||0)>=47 },
+  // スコア系
+  { id:'score100', icon:'💯', name:'100点獲得',        desc:'１回で100点（全問正解）',        check:(r)=>r.rate===100&&r.total>=10 },
+  { id:'total30',  icon:'🎯', name:'30もん完走',        desc:'30もんコースをクリア',           check:(r)=>r.total>=30 },
+  // 難易度系
+  { id:'hard5',    icon:'🦁', name:'チャレンジャー',    desc:'★★★を５問以上正解',            check:(r)=>r.hardCorrect>=5 },
+  { id:'hard20',   icon:'🧠', name:'ちりの天才',        desc:'★★★を20問以上（累計）正解',    check:(_,t)=>(t.hardCorrect||0)>=20 },
+];
+
+// =====================================================
+// ランキング・実績ストレージ
+// =====================================================
+const STOR_KEY = 'jgeo_records_v2';
+function loadRecords() {
+  try { return JSON.parse(localStorage.getItem(STOR_KEY)) || {}; } catch{ return {}; }
+}
+function saveRecords(rec) {
+  localStorage.setItem(STOR_KEY, JSON.stringify(rec));
+}
+function clearRecords() {
+  localStorage.removeItem(STOR_KEY);
+  renderRankList(rankCurrentCat);
+  renderAllBadges();
+  alert('きろくをリセットしました！');
+}
+
+// カテゴリ名ラベル
+const CAT_LABELS = {
+  pref:'都道府県', capital:'県庁所在地', region:'地方区分',
+  mountain:'山', river:'川', island:'島・半島', mixed:'ミックス'
+};
+
+// =====================================================
+// 結果を保存 & バッジ判定
+// =====================================================
+function saveResult(resultData) {
+  const rec = loadRecords();
+  // totalStats
+  if(!rec.stats) rec.stats = {totalQ:0, perfectCount:0, hardCorrect:0, catDone:{}, capitalCorrect:0};
+  rec.stats.totalQ += resultData.total;
+  if(resultData.rate===100) rec.stats.perfectCount++;
+  rec.stats.hardCorrect = (rec.stats.hardCorrect||0) + (resultData.hardCorrect||0);
+  rec.stats.capitalCorrect = (rec.stats.capitalCorrect||0) + (resultData.capitalCorrect||0);
+  selectedCats.forEach(id => { rec.stats.catDone[id] = true; });
+
+  // ランキング（カテゴリ別）
+  const catKey = selectedCats.length===1 ? selectedCats[0] : 'mixed';
+  if(!rec.ranking) rec.ranking = {};
+  if(!rec.ranking[catKey]) rec.ranking[catKey] = [];
+  rec.ranking[catKey].push({
+    score: resultData.score,
+    total: resultData.total,
+    rate:  resultData.rate,
+    date:  new Date().toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}),
+    streak:resultData.maxStreak,
+  });
+  rec.ranking[catKey].sort((a,b)=>b.rate-a.rate||b.score-a.score);
+  if(rec.ranking[catKey].length>10) rec.ranking[catKey]=rec.ranking[catKey].slice(0,10);
+
+  // バッジ判定
+  const earned = rec.earnedBadges || [];
+  const newBadges = [];
+  BADGES.forEach(b=>{
+    if(!earned.includes(b.id) && b.check(resultData, rec.stats)){
+      earned.push(b.id);
+      newBadges.push(b);
+    }
+  });
+  rec.earnedBadges = earned;
+  saveRecords(rec);
+  return newBadges;
+}
+
+// =====================================================
+// ランキング画面描画
+// =====================================================
+let rankCurrentCat = 'pref';
+function renderRankCatTabs() {
+  const tabs = document.getElementById('rank-cat-tabs');
+  if(!tabs) return;
+  tabs.innerHTML = '';
+  ['pref','capital','region','mountain','river','island','mixed'].forEach(id=>{
+    const btn = document.createElement('button');
+    btn.className = 'rank-cat-btn' + (id===rankCurrentCat?' active':'');
+    btn.textContent = CAT_LABELS[id];
+    btn.onclick = ()=>{ rankCurrentCat=id; renderRankCatTabs(); renderRankList(id); };
+    tabs.appendChild(btn);
+  });
+  renderRankList(rankCurrentCat);
+}
+function renderRankList(catKey) {
+  const rec = loadRecords();
+  const list = rec.ranking?.[catKey] || [];
+  const el = document.getElementById('rank-list');
+  if(!list.length){
+    el.innerHTML='<div class="rank-empty">まだきろくがありません<br>クイズをプレイしてね！</div>';
+    return;
+  }
+  const medals = ['🥇','🥈','🥉'];
+  el.innerHTML = '<table class="rank-table"><thead><tr><th></th><th>せいかいりつ</th><th>スコア</th><th>れんぞく</th><th>日付</th></tr></thead><tbody>'
+    + list.map((r,i)=>`<tr><td><span class="rank-medal">${medals[i]||`${i+1}`}</span></td><td>${r.rate}%</td><td>${r.score}/${r.total}</td><td>${r.streak}🔥</td><td>${r.date}</td></tr>`).join('')
+    + '</tbody></table>';
+}
+
+// =====================================================
+// バッジ画面描画
+// =====================================================
+function renderAllBadges() {
+  const rec = loadRecords();
+  const earned = rec.earnedBadges || [];
+  const el = document.getElementById('all-badges');
+  if(!el) return;
+  el.innerHTML = BADGES.map(b=>{
+    const got = earned.includes(b.id);
+    return `<div class="badge-item${got?'':' locked'}" title="${b.desc}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderNewBadges(newBadges) {
+  const el = document.getElementById('new-badges');
+  if(!newBadges.length){ el.innerHTML='<div style="font-size:12px;color:var(--gray)">（まだかくとくしていません）</div>'; return; }
+  el.innerHTML = newBadges.map(b=>
+    `<div class="badge-item new-glow">
+      <div class="badge-new">NEW!</div>
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+    </div>`
+  ).join('');
+}
+
+// =====================================================
+// 結果
+// =====================================================
+function showResult() {
+  clearInterval(timerInterval);
+  const total=quizQuestions.length, rate=Math.round(score/total*100);
+  // 難易度★★★正解数、county正解数を集計
+  let hardCorrect=0, capitalCorrect=0;
+  history.forEach((h,i)=>{
+    const q=quizQuestions[i];
+    if(h.ok){
+      if(q&&q.diff===3) hardCorrect++;
+      if(q&&q.cat==='capital') capitalCorrect++;
+    }
+  });
+  document.getElementById('result-score').textContent=`${score} / ${total}`;
+  document.getElementById('r-correct').textContent=score;
+  document.getElementById('r-wrong').textContent=total-score;
+  document.getElementById('r-streak').textContent=maxStreak;
+  document.getElementById('r-rate').textContent=rate+'%';
+  let emoji,msg;
+  if(rate===100){emoji='🏆';msg='かんぺき！ぜんもんせいかい！';}
+  else if(rate>=80){emoji='🎉';msg='すばらしい！よくできました！';}
+  else if(rate>=60){emoji='😊';msg='よくがんばりました！もう少し！';}
+  else if(rate>=40){emoji='🤔';msg='もういちどチャレンジしてみよう！';}
+  else{emoji='💪';msg='まけないで！くりかえし練習しよう！';}
+  const emojiEl=document.getElementById('result-emoji');
+  emojiEl.textContent=emoji;
+  if(rate===100)emojiEl.classList.add('bouncing');
+  else emojiEl.classList.remove('bouncing');
+  document.getElementById('result-msg').textContent=msg;
+  // ふりかえり
+  const list=document.getElementById('review-list');
+  list.innerHTML='';
+  history.forEach(h=>{
+    const div=document.createElement('div');
+    div.className='review-item '+(h.ok?'ok':'ng');
+    div.innerHTML=`<div class="rv-q">${h.ok?'✅':'❌'} ${h.q}</div>
+      <div class="rv-a">こたえ：${h.correct}${!h.ok&&h.chosen?`　あなた：${h.chosen}`:!h.ok?'　（じかんぎれ）':''}</div>`;
+    list.appendChild(div);
+  });
+  // 実績保存・バッジ判定
+  if(rate===100) playSound('perfect');
+  const newBadges = saveResult({score,total,rate,maxStreak,hardCorrect,capitalCorrect});
+  renderNewBadges(newBadges);
+  renderRankCatTabs();
+  // 復習ボタン：間違いがあれば有効
+  const wrongCount = history.filter(h=>!h.ok).length;
+  const rb = document.getElementById('review-btn');
+  rb.disabled = wrongCount===0;
+  rb.textContent = wrongCount>0 ? `📝 まちがい ${wrongCount}問 を復習する` : '📝 まちがいなし！';
+  showScreen('screen-result');
+}
+function confirmQuit(){
+  clearInterval(timerInterval);
+  if(confirm('とちゅうでやめますか？\n（きろくはのこります）')){
+    renderProgressScreen();
+    goTitle();
+  } else {
+    // タイマー再開（未回答時のみ）
+    if(!answered) startTimer();
+  }
+}
+function retryQuiz(){ isReviewMode=false; startQuiz(); }
+function goTitle(){ renderProgressScreen(); showScreen('screen-title'); }
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+
+init();
+
+// =====================================================
+// 間違いバンク（localStorage永続）
+// =====================================================
+const WRONG_KEY = 'jgeo_wrong_v1';
+
+function loadWrongBank() {
+  try { wrongBank = JSON.parse(localStorage.getItem(WRONG_KEY)) || []; }
+  catch { wrongBank = []; }
+}
+function saveWrongBank() {
+  localStorage.setItem(WRONG_KEY, JSON.stringify(wrongBank));
+}
+function addToWrongBank(q) {
+  if (!q) return;
+  // 同じ問題が既にあれば間違い回数を増やすだけ
+  const key = q.q; // HTML文字列をキーに
+  const existing = wrongBank.find(w => w.q === key);
+  if (existing) {
+    existing.wrongCount = (existing.wrongCount||1) + 1;
+    existing.cat = q.cat;
+  } else {
+    wrongBank.push({ ...q, wrongCount:1 });
+  }
+  saveWrongBank();
+}
+function removeFromWrongBank(qKey) {
+  wrongBank = wrongBank.filter(w => w.q !== qKey);
+  saveWrongBank();
+}
+
+// =====================================================
+// 復習モード開始（結果画面から）
+// =====================================================
+function startReview() {
+  const wrongQs = history.filter(h => !h.ok).map(h => h.qObj).filter(Boolean);
+  if (!wrongQs.length) return;
+  launchReviewMode(wrongQs);
+}
+
+// 進捗画面の「復習する」ボタン
+function startReviewFromProgress() {
+  if (!wrongBank.length) return;
+  launchReviewMode(shuffle([...wrongBank]));
+}
+
+function launchReviewMode(qs) {
+  isReviewMode = true;
+  currentIdx=0; score=0; streak=0; maxStreak=0; history=[];
+  quizQuestions = shuffle([...qs]);
+  document.getElementById('review-mode-banner').style.display='block';
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+// =====================================================
+// 進捗画面
+// =====================================================
+const CAT_COLORS = {
+  pref:'#E63946', capital:'#457B9D', region:'#2D9B4E',
+  mountain:'#8B4513', river:'#0077B6', island:'#9B2D9B'
+};
+
+function renderProgressScreen() {
+  const rec = loadRecordsForProgress();
+  const stats = rec.stats || {};
+  const totalQ   = stats.totalQ || 0;
+  const perfectC = stats.perfectCount || 0;
+  const hardC    = stats.hardCorrect || 0;
+  const badgeC   = (rec.earnedBadges||[]).length;
+
+  // 統計グリッド
+  document.getElementById('prog-stat-grid').innerHTML = `
+    <div class="stat-card"><div class="sc-val">${totalQ}</div><div class="sc-key">📚 ごうけいもん数</div></div>
+    <div class="stat-card"><div class="sc-val">${perfectC}</div><div class="sc-key">🏆 ぜんもんせいかい回数</div></div>
+    <div class="stat-card"><div class="sc-val">${hardC}</div><div class="sc-key">🦁 ★★★せいかい累計</div></div>
+    <div class="stat-card"><div class="sc-val">${badgeC}<span style="font-size:14px;color:var(--gray)">/${BADGES.length}</span></div><div class="sc-key">🎖 かくとくバッジ</div></div>
+  `;
+
+  // カテゴリ別正解率（ランキングデータから推定）
+  const catList = document.getElementById('prog-cat-list');
+  catList.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const entries = (rec.ranking || {})[cat.id] || [];
+    const best = entries.length ? Math.max(...entries.map(e=>e.rate)) : null;
+    const plays = entries.length;
+    const color = CAT_COLORS[cat.id] || '#457B9D';
+    const pct = best !== null ? best : 0;
+    catList.innerHTML += `
+      <div class="cat-progress-item">
+        <div class="cat-progress-label">
+          <span>${cat.icon} ${cat.name}</span>
+          <span class="cat-progress-rate">${plays>0 ? `さいこう ${pct}% (${plays}回プレイ)` : 'まだプレイしていません'}</span>
+        </div>
+        <div class="cat-bar-bg">
+          <div class="cat-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+      </div>`;
+  });
+
+  // 間違いバンク表示
+  loadWrongBank();
+  const wrongSummary = document.getElementById('wrong-summary');
+  const pb = document.getElementById('prog-review-btn');
+  if (wrongBank.length) {
+    const byCat = {};
+    wrongBank.forEach(q => { byCat[q.cat] = (byCat[q.cat]||0)+1; });
+    const detail = Object.entries(byCat).map(([id,n])=>{
+      const cat = CATEGORIES.find(c=>c.id===id);
+      return `${cat?cat.icon:''}${cat?cat.name:id}：${n}問`;
+    }).join('　');
+    wrongSummary.innerHTML = `<b style="color:var(--wrong)">${wrongBank.length}問</b>のまちがいがたまっています<br><span style="font-size:12px;color:var(--gray)">${detail}</span>`;
+    pb.disabled = false;
+    pb.textContent = `📝 まちがい ${wrongBank.length}問 を復習する`;
+  } else {
+    wrongSummary.innerHTML = '<span style="color:var(--correct)">✅ まちがいはありません！すばらしい！</span>';
+    pb.disabled = true;
+    pb.textContent = '📝 まちがいなし';
+  }
+}
+
+function loadRecordsForProgress() {
+  try { return JSON.parse(localStorage.getItem('jgeo_records_v2')) || {}; }
+  catch { return {}; }
+}
+
+// showScreen に進捗更新を追加
+const _origShowScreen = showScreen;
+// 既存showScreenをオーバーライド
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-progress') renderProgressScreen();
+  if (id === 'screen-rank')     renderRankCatTabs();
+}
+
+// =====================================================
+// スプラッシュ
+// =====================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const splash = document.getElementById('splash');
+  setTimeout(() => {
+    splash.classList.add('hide');
+    setTimeout(() => { splash.style.display = 'none'; }, 560);
+  }, 1800);
+});
+
+// =====================================================
+// Web Audio サウンド
+// =====================================================
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playSound(type) {
+  try {
+    const ctx = getAudio();
+    if (type === 'correct') {
+      // ピンポン♪ (2音上昇)
+      [[660,.08,.12],[880,.12,.12]].forEach(([f,s,d],i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine'; o.frequency.value = f;
+        const t = ctx.currentTime + i*0.12 + s;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.28, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t + d);
+        o.start(t); o.stop(t + d + 0.05);
+      });
+    } else if (type === 'wrong') {
+      // ブッ♪ (低音)
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sawtooth'; o.frequency.value = 180;
+      o.frequency.linearRampToValueAtTime(120, ctx.currentTime + 0.18);
+      g.gain.setValueAtTime(0.22, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+      o.start(); o.stop(ctx.currentTime + 0.25);
+    } else if (type === 'perfect') {
+      // ファンファーレ風 (4音)
+      [[523,.05,.18],[659,.18,.18],[784,.32,.18],[1047,.46,.3]].forEach(([f,s,d]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'triangle'; o.frequency.value = f;
+        const t = ctx.currentTime + s;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.25, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.001, t + d);
+        o.start(t); o.stop(t + d + 0.05);
+      });
+    } else if (type === 'timeout') {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'square'; o.frequency.value = 300;
+      o.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.3);
+      g.gain.setValueAtTime(0.15, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
+      o.start(); o.stop(ctx.currentTime + 0.35);
+    }
+  } catch(e) {}
+}
+
+// =====================================================
+// 正解アニメーション
+// =====================================================
+function showFlash(ok) {
+  const ov = document.getElementById('correct-overlay');
+  const st = document.getElementById('overlay-stamp');
+  st.textContent = ok ? '⭕' : '❌';
+  ov.className = '';
+  void ov.offsetWidth; // reflow
+  ov.className = ok ? 'flash-ok' : 'flash-ng';
+  setTimeout(() => { ov.className = ''; }, 600);
+}
+
+// =====================================================
+// パーティクル（正解時の紙吹雪）
+// =====================================================
+const canvas = document.getElementById('particle-canvas');
+const pctx   = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function spawnParticles() {
+  const colors = ['#FFB703','#E63946','#2D9B4E','#457B9D','#A8DADC','#FF6B6B','#FFF'];
+  for (let i = 0; i < 48; i++) {
+    particles.push({
+      x:  Math.random() * canvas.width,
+      y:  -10,
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 4 + 2,
+      r:  Math.random() * 7 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot:  Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.2,
+      life: 1,
+    });
+  }
+  requestAnimationFrame(animateParticles);
+}
+
+function animateParticles() {
+  pctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles = particles.filter(p => p.life > 0.01);
+  particles.forEach(p => {
+    p.x  += p.vx; p.y += p.vy; p.vy += 0.12;
+    p.rot += p.rotV; p.life -= 0.018;
+    pctx.save();
+    pctx.globalAlpha = p.life;
+    pctx.translate(p.x, p.y);
+    pctx.rotate(p.rot);
+    pctx.fillStyle = p.color;
+    pctx.fillRect(-p.r/2, -p.r/2, p.r, p.r * 1.6);
+    pctx.restore();
+  });
+  if (particles.length) requestAnimationFrame(animateParticles);
+}
+
+// =====================================================
+// カードシェイク
+// =====================================================
+function shakeCard() {
+  const card = document.querySelector('#screen-quiz .card');
+  card.classList.remove('shake');
+  void card.offsetWidth;
+  card.classList.add('shake');
+  setTimeout(() => card.classList.remove('shake'), 400);
+}
+</script>
+</body>
+</html>

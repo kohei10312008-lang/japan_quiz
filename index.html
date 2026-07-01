@@ -213,7 +213,8 @@
   .badge-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:4px; }
   .badge-item {
     display:flex; flex-direction:column; align-items:center; text-align:center;
-    background:var(--light); border-radius:10px; padding:8px 4px; position:relative;
+    background:var(--light); border-radius:10px; padding:9px 4px 7px; position:relative;
+    border:2px solid transparent; overflow:hidden;
   }
   .badge-item.locked { opacity:0.35; filter:grayscale(1); }
   .badge-item.new-glow { animation:glow .8s ease 3; }
@@ -221,7 +222,29 @@
   .badge-icon { font-size:26px; line-height:1; }
   .badge-name { font-size:9px; font-weight:700; color:var(--navy); margin-top:3px; line-height:1.2; }
   .badge-new { position:absolute; top:-4px; right:-4px; background:var(--red); color:#fff;
-    font-size:9px; font-weight:900; padding:1px 5px; border-radius:99px; }
+    font-size:9px; font-weight:900; padding:1px 5px; border-radius:99px; z-index:2; }
+
+  /* レア度 */
+  .badge-tier-tag {
+    position:absolute; top:0; left:0; font-size:8px; line-height:1; font-weight:900; color:#fff;
+    padding:2px 5px 2px 4px; border-bottom-right-radius:8px; z-index:1;
+  }
+  .badge-tier-tag.common { background:#9CA3AF; }
+  .badge-tier-tag.rare   { background:#3B82F6; }
+  .badge-tier-tag.epic   { background:linear-gradient(90deg,#FFB703,#FF6B35); }
+  .badge-item.tier-rare:not(.locked)  { border-color:#3B82F655; background:linear-gradient(160deg,#eef4ff,#dce8ff); }
+  .badge-item.tier-epic:not(.locked)  { border-color:#FFB70399; background:linear-gradient(160deg,#fff6df,#ffe4a8); }
+  .badge-item.tier-epic:not(.locked) .badge-icon { animation: epicShine 2.2s ease-in-out infinite; }
+  @keyframes epicShine {
+    0%,100%{ filter:drop-shadow(0 0 0 rgba(255,183,3,0)); transform:scale(1); }
+    50%    { filter:drop-shadow(0 0 6px rgba(255,183,3,.9)); transform:scale(1.08); }
+  }
+  .badge-legend { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .badge-legend-item { display:flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:var(--gray); }
+  .badge-legend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .badge-legend-dot.common { background:#9CA3AF; }
+  .badge-legend-dot.rare   { background:#3B82F6; }
+  .badge-legend-dot.epic   { background:linear-gradient(90deg,#FFB703,#FF6B35); }
 
   /* ===== RANKING ===== */
   .rank-cat-btn {
@@ -336,6 +359,25 @@
   .progress-screen-header {
     display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;
   }
+
+  /* ===== 統一ナビゲーション（進捗・バッジ・図鑑・保護者） ===== */
+  .report-nav { display:flex; gap:6px; margin-bottom:10px; }
+  .report-nav-btn {
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+    background:var(--light); border:none; border-radius:11px; padding:9px 2px 7px;
+    font-family:inherit; cursor:pointer; color:var(--gray); font-size:10px; font-weight:800;
+    transition:background .15s,color .15s;
+  }
+  .report-nav-btn .rn-icon { font-size:19px; line-height:1; }
+  .report-nav-btn.active { background:var(--navy); color:#fff; }
+  .report-nav-btn:active { transform:scale(.96); }
+  .report-home-row { margin-bottom:6px; }
+  .report-home-btn {
+    background:none; border:none; font-family:inherit; font-size:12px; font-weight:800;
+    color:var(--gray); cursor:pointer; padding:4px 2px;
+  }
+  .report-screen-title { font-size:16px; font-weight:900; color:var(--navy); margin-bottom:12px; }
+
   .stat-grid {
     display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;
   }
@@ -371,6 +413,102 @@
     transition:opacity .15s;
   }
   .review-start-btn:disabled { opacity:.45; cursor:not-allowed; }
+
+  /* ===== キャラクター育成 ===== */
+  .char-widget {
+    display:flex; align-items:center; gap:12px; background:var(--light);
+    border-radius:14px; padding:10px 14px; margin-bottom:14px; cursor:pointer;
+    transition:transform .12s; border:2px solid transparent;
+  }
+  .char-widget:active { transform:scale(.97); }
+  .char-avatar {
+    font-size:38px; line-height:1; flex-shrink:0;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.15));
+    animation:charIdle 2.4s ease-in-out infinite;
+  }
+  @keyframes charIdle { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-3px) rotate(-4deg)} }
+  .char-info { flex:1; min-width:0; }
+  .char-name-row { display:flex; align-items:baseline; gap:6px; margin-bottom:4px; }
+  .char-lv { font-size:12px; font-weight:900; color:#fff; background:var(--navy); padding:2px 7px; border-radius:99px; flex-shrink:0; }
+  .char-name { font-size:13px; font-weight:900; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .char-xp-bar-bg { background:#d9e6ea; border-radius:99px; height:8px; overflow:hidden; }
+  .char-xp-bar-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--gold),#ffca4d); transition:width .5s ease; }
+  .char-xp-label { font-size:10px; color:var(--gray); margin-top:2px; text-align:right; }
+  .char-widget.mini { margin-bottom:16px; cursor:default; }
+  .char-widget.mini:active { transform:none; }
+
+  /* ===== レベルアップ演出 ===== */
+  .levelup-overlay {
+    position:fixed; inset:0; z-index:9600; display:none;
+    align-items:center; justify-content:center;
+    background:rgba(29,53,87,.72); padding:20px;
+  }
+  .levelup-overlay.show { display:flex; animation:fadeUp .25s ease; }
+  .levelup-card {
+    background:#fff; border-radius:20px; padding:28px 24px; text-align:center;
+    max-width:320px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.35);
+    animation:levelupPop .45s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes levelupPop { 0%{transform:scale(.4);opacity:0} 100%{transform:scale(1);opacity:1} }
+  .levelup-label { font-size:14px; font-weight:900; color:#b45309; letter-spacing:.15em; margin-bottom:6px; }
+  .levelup-avatar { font-size:72px; animation:bounce .6s ease 3; margin:6px 0; }
+  .levelup-lv { font-size:26px; font-weight:900; color:var(--navy); }
+  .levelup-name { font-size:15px; font-weight:700; color:var(--gray); margin:2px 0 18px; }
+  .levelup-newstage { font-size:12px; font-weight:900; color:#fff; background:var(--red); display:inline-block; padding:3px 10px; border-radius:99px; margin-bottom:12px; }
+  .levelup-close-btn {
+    display:block; width:100%; padding:13px; background:var(--red); color:#fff;
+    font-family:inherit; font-size:15px; font-weight:900; border:none; border-radius:12px;
+    cursor:pointer;
+  }
+
+  /* ===== 結果画面 XP獲得 ===== */
+  .xp-gain-box {
+    background:linear-gradient(90deg,#fff8e6,#fff3cd); border-radius:12px;
+    padding:10px 14px; margin-bottom:14px; display:flex; align-items:center;
+    justify-content:space-between; gap:10px;
+  }
+  .xp-gain-left { display:flex; align-items:center; gap:8px; }
+  .xp-gain-avatar { font-size:26px; }
+  .xp-gain-text { font-size:12px; font-weight:700; color:#b45309; }
+  .xp-gain-amount { font-size:16px; font-weight:900; color:#b45309; white-space:nowrap; }
+
+  /* ===== 都道府県図鑑 ===== */
+  .prefdex-summary { font-size:14px; font-weight:900; color:var(--navy); text-align:center; margin-bottom:6px; }
+  .prefdex-bar-bg { background:#d9e6ea; border-radius:99px; height:10px; overflow:hidden; margin-bottom:14px; }
+  .prefdex-bar-fill { height:100%; background:linear-gradient(90deg,var(--gold),#ffca4d); border-radius:99px; transition:width .5s ease; }
+  .prefdex-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px; }
+  .prefdex-item {
+    background:var(--light); border-radius:8px; padding:8px 2px 6px; text-align:center;
+    font-size:10px; font-weight:700; color:var(--gray); border:1.5px solid transparent;
+  }
+  .prefdex-item.done { background:linear-gradient(160deg,#fff6df,#ffe4a8); color:var(--navy); border-color:#FFB70399; }
+  .prefdex-item .pd-icon { font-size:16px; display:block; margin-bottom:2px; }
+  .prefdex-item .pd-frac { font-size:9px; color:var(--gray); display:block; margin-top:1px; }
+  .prefdex-hint { font-size:11px; color:var(--gray); text-align:center; margin-top:2px; line-height:1.5; }
+
+  /* ===== 保護者レポート ===== */
+  .parent-note {
+    font-size:12px; color:var(--gray); background:var(--light); border-radius:10px;
+    padding:10px 12px; margin-bottom:14px; line-height:1.6;
+  }
+  .weak-box {
+    background:linear-gradient(160deg,#fff0f0,#ffe1e1); border:1.5px solid #f8b4b4;
+    border-radius:14px; padding:14px; margin-bottom:16px;
+  }
+  .weak-box-title { font-size:13px; font-weight:900; color:var(--red); margin-bottom:6px; }
+  .weak-box-cat { font-size:14px; font-weight:900; color:var(--navy); margin-bottom:10px; }
+  .weak-box-btn {
+    width:100%; padding:11px; background:var(--red); color:#fff; font-family:inherit;
+    font-size:13px; font-weight:900; border:none; border-radius:10px; cursor:pointer;
+  }
+  .trend-chart {
+    display:flex; align-items:flex-end; gap:6px; height:90px; background:var(--light);
+    border-radius:12px; padding:10px 8px 4px; margin-bottom:6px;
+  }
+  .trend-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .trend-bar { width:100%; max-width:18px; border-radius:4px 4px 0 0; transition:height .4s ease; }
+  .trend-bar-label { font-size:8px; color:var(--gray); margin-top:3px; font-weight:700; }
+  .trend-caption { font-size:10px; color:var(--gray); text-align:center; margin-bottom:16px; }
 </style>
 </head>
 <body>
@@ -390,18 +528,31 @@
 <!-- ===== FLASH OVERLAY ===== -->
 <div id="correct-overlay"><div class="overlay-stamp" id="overlay-stamp"></div></div>
 
+<!-- ===== LEVEL UP OVERLAY ===== -->
+<div id="levelup-overlay" class="levelup-overlay">
+  <div class="levelup-card">
+    <div class="levelup-label">✨ LEVEL UP！✨</div>
+    <div class="levelup-avatar" id="levelup-avatar">🦊</div>
+    <div class="levelup-lv" id="levelup-lv">Lv.4</div>
+    <div class="levelup-name" id="levelup-name">きつね見習い</div>
+    <div class="levelup-newstage" id="levelup-newstage" style="display:none">✨ しんかした！ ✨</div>
+    <button class="levelup-close-btn" onclick="closeLevelUp()">やったー！</button>
+  </div>
+</div>
+
 <!-- ===== PARTICLE CANVAS ===== -->
 <canvas id="particle-canvas"></canvas>
 
 <!-- ===== TITLE ===== -->
 <div id="screen-title" class="screen active">
   <div class="card">
-    <div class="app-header" style="position:relative;">
+    <div class="app-header">
       <span class="flag">🗾</span>
       <div class="app-title">にほんちり クイズ</div>
       <div class="app-sub">小学生のための日本地理べんきょうアプリ</div>
-      <button onclick="showScreen('screen-progress')" style="position:absolute;top:0;right:0;background:none;border:none;cursor:pointer;font-size:22px;" title="進捗をみる">📊</button>
     </div>
+
+    <div class="report-nav" id="title-report-nav"></div>
 
     <div class="furigana-row">
       <span class="furigana-label">ふりがな</span>
@@ -410,6 +561,18 @@
         <div class="toggle-track"></div>
         <div class="toggle-thumb"></div>
       </label>
+    </div>
+
+    <div class="char-widget" onclick="showScreen('screen-progress')" id="char-widget-title">
+      <div class="char-avatar" id="char-avatar-title">🥚</div>
+      <div class="char-info">
+        <div class="char-name-row">
+          <span class="char-lv" id="char-lv-title">Lv.1</span>
+          <span class="char-name" id="char-name-title">たまごちゃん</span>
+        </div>
+        <div class="char-xp-bar-bg"><div class="char-xp-bar-fill" id="char-xp-fill-title" style="width:0%"></div></div>
+        <div class="char-xp-label" id="char-xp-label-title">0 / 100 XP</div>
+      </div>
     </div>
 
     <div class="section-label">カテゴリをえらぼう（複数OK）</div>
@@ -460,11 +623,21 @@
 <!-- ===== PROGRESS ===== -->
 <div id="screen-progress" class="screen">
   <div class="card">
-    <div class="progress-screen-header">
-      <div class="app-title" style="font-size:20px;">📊 しんちょく</div>
-      <button class="back-btn" style="width:auto;padding:8px 14px;" onclick="showScreen('screen-title')">もどる</button>
-    </div>
+    <div class="report-home-row"><button class="report-home-btn" onclick="showScreen('screen-title')">← ホームにもどる</button></div>
+    <div class="report-nav"></div>
+    <div class="report-screen-title">📊 しんちょく</div>
     <div class="stat-grid" id="prog-stat-grid"></div>
+    <div class="char-widget mini" id="char-widget-progress">
+      <div class="char-avatar" id="char-avatar-progress">🥚</div>
+      <div class="char-info">
+        <div class="char-name-row">
+          <span class="char-lv" id="char-lv-progress">Lv.1</span>
+          <span class="char-name" id="char-name-progress">たまごちゃん</span>
+        </div>
+        <div class="char-xp-bar-bg"><div class="char-xp-bar-fill" id="char-xp-fill-progress" style="width:0%"></div></div>
+        <div class="char-xp-label" id="char-xp-label-progress">0 / 100 XP</div>
+      </div>
+    </div>
     <div class="section-label">カテゴリ別せいかいりつ</div>
     <div class="cat-progress-list" id="prog-cat-list"></div>
     <div class="section-label">まちがえた問題</div>
@@ -473,18 +646,55 @@
   </div>
 </div>
 
+<!-- ===== 都道府県図鑑 ===== -->
+<div id="screen-prefdex" class="screen">
+  <div class="card">
+    <div class="report-home-row"><button class="report-home-btn" onclick="showScreen('screen-title')">← ホームにもどる</button></div>
+    <div class="report-nav"></div>
+    <div class="report-screen-title">📖 都道府県図鑑</div>
+    <div class="prefdex-summary" id="prefdex-summary">0 / 47 けんをマスター</div>
+    <div class="prefdex-bar-bg"><div class="prefdex-bar-fill" id="prefdex-bar-fill" style="width:0%"></div></div>
+    <div class="prefdex-grid" id="prefdex-grid"></div>
+    <div class="prefdex-hint">クイズで正解すると、その県のマスがぬりつぶされるよ。まちがえた問題は「復習」でもう一度こたえよう！</div>
+  </div>
+</div>
+
+<!-- ===== 保護者レポート ===== -->
+<div id="screen-parent" class="screen">
+  <div class="card">
+    <div class="report-home-row"><button class="report-home-btn" onclick="showScreen('screen-title')">← ホームにもどる</button></div>
+    <div class="report-nav"></div>
+    <div class="report-screen-title">📋 保護者レポート</div>
+    <div class="parent-note">お子さまの学習状況をまとめました。苦手なカテゴリが見つかったら、下のボタンからいっしょに特訓できます。</div>
+    <div class="stat-grid" id="parent-stat-grid"></div>
+
+    <div class="section-label">さいきんの正答率（直近10回）</div>
+    <div class="trend-chart" id="parent-trend"></div>
+    <div class="trend-caption">緑：80%以上　黄：50〜79%　赤：50%未満</div>
+
+    <div id="parent-weak-box" class="weak-box"></div>
+
+    <div class="section-label">カテゴリ別 累計正答率</div>
+    <div class="cat-progress-list" id="parent-cat-list"></div>
+  </div>
+</div>
+
 <!-- ===== RANKING ===== -->
 <div id="screen-rank" class="screen">
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div class="app-title" style="font-size:20px;">🏆 ランキング</div>
-      <button class="back-btn" style="width:auto;padding:8px 14px;" onclick="showScreen('screen-title')">もどる</button>
+    <div class="report-home-row"><button class="report-home-btn" onclick="showScreen('screen-title')">← ホームにもどる</button></div>
+    <div class="report-nav"></div>
+    <div class="report-screen-title">🏆 バッジ・ランキング</div>
+    <div class="section-label">かくとくバッジ一覧</div>
+    <div class="badge-legend">
+      <span class="badge-legend-item"><span class="badge-legend-dot common"></span>ノーマル</span>
+      <span class="badge-legend-item"><span class="badge-legend-dot rare"></span>レア</span>
+      <span class="badge-legend-item"><span class="badge-legend-dot epic"></span>エピック</span>
     </div>
-    <div class="section-label">カテゴリをえらぶ</div>
+    <div id="all-badges" class="badge-grid"></div>
+    <div class="section-label" style="margin-top:14px;">ランキング（カテゴリべつ）</div>
     <div id="rank-cat-tabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;"></div>
     <div id="rank-list"></div>
-    <div class="section-label" style="margin-top:14px;">かくとくバッジ一覧</div>
-    <div id="all-badges" class="badge-grid"></div>
     <button class="back-btn" style="margin-top:14px;color:#DC2626;border:1.5px solid #DC2626;" onclick="if(confirm('きろくをすべて消しますか？'))clearRecords()">🗑 きろくをリセット</button>
   </div>
 </div>
@@ -497,6 +707,13 @@
       <div class="result-label">せいかいすう</div>
     </div>
     <div class="result-message" id="result-msg"></div>
+    <div class="xp-gain-box" id="xp-gain-box" style="display:none">
+      <div class="xp-gain-left">
+        <span class="xp-gain-avatar" id="xp-gain-avatar">🦊</span>
+        <span class="xp-gain-text" id="xp-gain-text">たびギツネがけいけんちをかくとく！</span>
+      </div>
+      <span class="xp-gain-amount" id="xp-gain-amount">+0 XP</span>
+    </div>
     <div class="result-breakdown">
       <div class="stat-box"><div class="stat-val" id="r-correct">0</div><div class="stat-key">✅ せいかい</div></div>
       <div class="stat-box"><div class="stat-val" id="r-wrong">0</div><div class="stat-key">❌ まちがい</div></div>
@@ -511,7 +728,7 @@
     <button class="review-start-btn" id="review-btn" onclick="startReview()">📝 まちがいだけ復習する</button>
     <div style="display:flex;gap:8px;margin-top:8px;">
       <button class="back-btn" style="flex:1" onclick="goTitle()">もどる</button>
-      <button class="back-btn" style="flex:1;background:#1D3557;color:#fff;" onclick="showScreen('screen-rank')">🏆 ランキング</button>
+      <button class="back-btn" style="flex:1;background:#1D3557;color:#fff;" onclick="showScreen('screen-rank')">🏆 バッジ・ランキング</button>
     </div>
   </div>
 </div>
@@ -521,132 +738,154 @@
 // カテゴリ・問題データ
 // =====================================================
 const CATEGORIES = [
-  { id:'pref',     name:'都道府県',   icon:'🏯' },
-  { id:'capital',  name:'県庁所在地', icon:'🏙️' },
-  { id:'region',   name:'地方区分',   icon:'🗺️' },
-  { id:'mountain', name:'山',         icon:'🗻' },
-  { id:'river',    name:'川',         icon:'💧' },
-  { id:'island',   name:'島・半島',   icon:'🏝️' },
+  { id:'pref',      name:'都道府県',   icon:'🏯' },
+  { id:'capital',   name:'県庁所在地', icon:'🏙️' },
+  { id:'region',    name:'地方区分',   icon:'🗺️' },
+  { id:'mountain',  name:'山',         icon:'🗻' },
+  { id:'river',     name:'川',         icon:'💧' },
+  { id:'island',    name:'島・半島',   icon:'🏝️' },
+  { id:'specialty', name:'特産品',     icon:'🎁' },
+];
+const REPORT_NAV_ITEMS = [
+  { id:'screen-progress', icon:'📊', label:'進捗' },
+  { id:'screen-rank',     icon:'🏆', label:'バッジ' },
+  { id:'screen-prefdex',  icon:'📖', label:'図鑑' },
+  { id:'screen-parent',   icon:'📋', label:'保護者' },
 ];
 const R = (k,r) => `<ruby>${k}<rt>${r}</rt></ruby>`;
 const QUESTIONS = {
   pref:[
-    {q:`もっとも${R('面積','めんせき')}が${R('大','おお')}きい${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','岩手県','福島県','長野県'],hint:'北にある大きな島です',diff:1},
-    {q:`もっとも${R('面積','めんせき')}が${R('小','ちい')}さい${R('都道府県','とどうふけん')}は？`,a:'大阪府',choices:['大阪府','香川県','東京都','神奈川県'],hint:'関西の都市部にある府です',diff:3},
-    {q:`もっとも${R('人口','じんこう')}が${R('多','おお')}い${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','大阪府','神奈川県','愛知県'],hint:'日本の首都です',diff:1},
-    {q:`もっとも${R('人口','じんこう')}が${R('少','すく')}ない${R('都道府県','とどうふけん')}は？`,a:'鳥取県',choices:['鳥取県','島根県','高知県','徳島県'],hint:'砂丘が有名な県です',diff:2},
-    {q:`${R('琵琶湖','びわこ')}がある${R('都道府県','とどうふけん')}は？`,a:'滋賀県',choices:['滋賀県','三重県','福井県','岐阜県'],hint:'日本最大の湖がある県です',diff:1},
-    {q:`${R('出雲大社','いずもたいしゃ')}がある${R('都道府県','とどうふけん')}は？`,a:'島根県',choices:['島根県','鳥取県','岡山県','広島県'],hint:'縁結びの神様で有名です',diff:1},
-    {q:`${R('阿波おどり','あわおどり')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'徳島県',choices:['徳島県','高知県','愛媛県','香川県'],hint:'四国にある県です',diff:1},
-    {q:`${R('うどん','うどん')}の${R('消費量','しょうひりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'香川県',choices:['香川県','大阪府','愛知県','福岡県'],hint:'讃岐うどんで有名です',diff:1},
-    {q:`${R('桃太郎','ももたろう')}のでんせつで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'岡山県',choices:['岡山県','広島県','兵庫県','鳥取県'],hint:'きびだんごも名物です',diff:1},
-    {q:`${R('ねぶた祭','ねぶたまつ')}りで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'青森県',choices:['青森県','秋田県','岩手県','宮城県'],hint:'東北地方の北端にある県です',diff:1},
-    {q:`${R('なまはげ','なまはげ')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'秋田県',choices:['秋田県','青森県','岩手県','山形県'],hint:'日本海側の東北の県です',diff:1},
-    {q:`${R('梅','うめ')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'和歌山県',choices:['和歌山県','奈良県','三重県','愛媛県'],hint:'紀伊半島の南にある県です',diff:2},
-    {q:`${R('さくらんぼ','さくらんぼ')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'山形県',choices:['山形県','山梨県','長野県','青森県'],hint:'東北地方にある県です',diff:2},
-    {q:`${R('みかん','みかん')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'和歌山県',choices:['和歌山県','愛媛県','静岡県','熊本県'],hint:'紀伊半島の南にある県です',diff:2},
-    {q:`${R('じゃがいも','じゃがいも')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','長崎県','鹿児島県','茨城県'],hint:'広大な農地があります',diff:2},
-    {q:`${R('海','うみ')}に${R('面','めん')}していない${R('内陸県','ないりくけん')}はどれ？`,a:'栃木県',choices:['栃木県','千葉県','茨城県','神奈川県'],hint:'日光東照宮がある県です',diff:2},
+    {q:`もっとも${R('面積','めんせき')}が${R('大','おお')}きい${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','岩手県','福島県','長野県'],hint:'北にある大きな島です',diff:1,pref:'北海道'},
+    {q:`もっとも${R('面積','めんせき')}が${R('小','ちい')}さい${R('都道府県','とどうふけん')}は？`,a:'大阪府',choices:['大阪府','香川県','東京都','神奈川県'],hint:'関西の都市部にある府です',diff:3,pref:'大阪府'},
+    {q:`もっとも${R('人口','じんこう')}が${R('多','おお')}い${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','大阪府','神奈川県','愛知県'],hint:'日本の首都です',diff:1,pref:'東京都'},
+    {q:`もっとも${R('人口','じんこう')}が${R('少','すく')}ない${R('都道府県','とどうふけん')}は？`,a:'鳥取県',choices:['鳥取県','島根県','高知県','徳島県'],hint:'砂丘が有名な県です',diff:2,pref:'鳥取県'},
+    {q:`${R('琵琶湖','びわこ')}がある${R('都道府県','とどうふけん')}は？`,a:'滋賀県',choices:['滋賀県','三重県','福井県','岐阜県'],hint:'日本最大の湖がある県です',diff:1,pref:'滋賀県'},
+    {q:`${R('出雲大社','いずもたいしゃ')}がある${R('都道府県','とどうふけん')}は？`,a:'島根県',choices:['島根県','鳥取県','岡山県','広島県'],hint:'縁結びの神様で有名です',diff:1,pref:'島根県'},
+    {q:`${R('阿波おどり','あわおどり')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'徳島県',choices:['徳島県','高知県','愛媛県','香川県'],hint:'四国にある県です',diff:1,pref:'徳島県'},
+    {q:`${R('うどん','うどん')}の${R('消費量','しょうひりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'香川県',choices:['香川県','大阪府','愛知県','福岡県'],hint:'讃岐うどんで有名です',diff:1,pref:'香川県'},
+    {q:`${R('桃太郎','ももたろう')}のでんせつで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'岡山県',choices:['岡山県','広島県','兵庫県','鳥取県'],hint:'きびだんごも名物です',diff:1,pref:'岡山県'},
+    {q:`${R('ねぶた祭','ねぶたまつ')}りで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'青森県',choices:['青森県','秋田県','岩手県','宮城県'],hint:'東北地方の北端にある県です',diff:1,pref:'青森県'},
+    {q:`${R('なまはげ','なまはげ')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'秋田県',choices:['秋田県','青森県','岩手県','山形県'],hint:'日本海側の東北の県です',diff:1,pref:'秋田県'},
+    {q:`${R('梅','うめ')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'和歌山県',choices:['和歌山県','奈良県','三重県','愛媛県'],hint:'紀伊半島の南にある県です',diff:2,pref:'和歌山県'},
+    {q:`${R('さくらんぼ','さくらんぼ')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'山形県',choices:['山形県','山梨県','長野県','青森県'],hint:'東北地方にある県です',diff:2,pref:'山形県'},
+    {q:`${R('みかん','みかん')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'和歌山県',choices:['和歌山県','愛媛県','静岡県','熊本県'],hint:'紀伊半島の南にある県です',diff:2,pref:'和歌山県'},
+    {q:`${R('じゃがいも','じゃがいも')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','長崎県','鹿児島県','茨城県'],hint:'広大な農地があります',diff:2,pref:'北海道'},
+    {q:`${R('海','うみ')}に${R('面','めん')}していない${R('内陸県','ないりくけん')}はどれ？`,a:'栃木県',choices:['栃木県','千葉県','茨城県','神奈川県'],hint:'日光東照宮がある県です',diff:2,pref:'栃木県'},
     {q:`${R('本州','ほんしゅう')}・${R('四国','しこく')}・${R('九州','きゅうしゅう')}にはさまれた${R('海','うみ')}は？`,a:'瀬戸内海',choices:['瀬戸内海','日本海','太平洋','東シナ海'],hint:'穏やかな海として有名です',diff:2},
-    {q:`${R('琉球王国','りゅうきゅうおうこく')}とよばれていた${R('歴史','れきし')}がある${R('都道府県','とどうふけん')}は？`,a:'沖縄県',choices:['沖縄県','鹿児島県','長崎県','熊本県'],hint:'首里城が有名です',diff:2},
-    {q:`${R('白川郷','しらかわごう')}の${R('合掌造','がっしょうづく')}りで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'岐阜県',choices:['岐阜県','富山県','石川県','長野県'],hint:'世界遺産に登録されています',diff:2},
+    {q:`${R('琉球王国','りゅうきゅうおうこく')}とよばれていた${R('歴史','れきし')}がある${R('都道府県','とどうふけん')}は？`,a:'沖縄県',choices:['沖縄県','鹿児島県','長崎県','熊本県'],hint:'首里城が有名です',diff:2,pref:'沖縄県'},
+    {q:`${R('白川郷','しらかわごう')}の${R('合掌造','がっしょうづく')}りで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'岐阜県',choices:['岐阜県','富山県','石川県','長野県'],hint:'世界遺産に登録されています',diff:2,pref:'岐阜県'},
     {q:`${R('瀬戸大橋','せとおおはし')}でつながっている${R('県','けん')}の${R('組','くみ')}み${R('合','あ')}わせは？`,a:'岡山県と香川県',choices:['岡山県と香川県','広島県と愛媛県','山口県と大分県','兵庫県と徳島県'],hint:'本州と四国をむすびます',diff:2},
-    {q:`${R('有田焼','ありたやき')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'佐賀県',choices:['佐賀県','長崎県','福岡県','大分県'],hint:'九州にある小さな県です',diff:3},
-    {q:`${R('大分県','おおいたけん')}が${R('日本一','にほんいち')}の${R('数','かず')}を${R('誇','ほこ')}るものは？`,a:'温泉の数',choices:['温泉の数','牛の数','みかんの数','漁港の数'],hint:'別府温泉が有名です',diff:3},
+    {q:`${R('有田焼','ありたやき')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'佐賀県',choices:['佐賀県','長崎県','福岡県','大分県'],hint:'九州にある小さな県です',diff:3,pref:'佐賀県'},
+    {q:`${R('大分県','おおいたけん')}が${R('日本一','にほんいち')}の${R('数','かず')}を${R('誇','ほこ')}るものは？`,a:'温泉の数',choices:['温泉の数','牛の数','みかんの数','漁港の数'],hint:'別府温泉が有名です',diff:3,pref:'大分県'},
     {q:`${R('日本','にほん')}で${R('唯一','ゆいいつ')}、${R('府','ふ')}が${R('２つ','ふたつ')}ある${R('地方','ちほう')}は？`,a:'近畿地方',choices:['近畿地方','関東地方','中部地方','中国地方'],hint:'大阪府と京都府があります',diff:3},
-    {q:`${R('政令指定都市','せいれいしていとし')}が${R('３つ','みっつ')}ある${R('唯一','ゆいいつ')}の${R('都道府県','とどうふけん')}は？`,a:'神奈川県',choices:['神奈川県','大阪府','愛知県','静岡県'],hint:'横浜・川崎・相模原が含まれます',diff:3},
+    {q:`${R('政令指定都市','せいれいしていとし')}が${R('３つ','みっつ')}ある${R('唯一','ゆいいつ')}の${R('都道府県','とどうふけん')}は？`,a:'神奈川県',choices:['神奈川県','大阪府','愛知県','静岡県'],hint:'横浜・川崎・相模原が含まれます',diff:3,pref:'神奈川県'},
     {q:`${R('日本','にほん')}の${R('都道府県','とどうふけん')}はぜんぶでいくつ？`,a:'47',choices:['47','46','48','45'],hint:'１都・１道・２府・43県',diff:3},
-    {q:`${R('本州最北端','ほんしゅうさいほくたん')}にある${R('半島','はんとう')}がある${R('県','けん')}は？`,a:'青森県',choices:['青森県','岩手県','秋田県','宮城県'],hint:'下北半島と津軽半島があります',diff:3},
-    {q:`${R('四国','しこく')}で${R('最も','もっとも')}${R('面積','めんせき')}が${R('大','おお')}きい${R('県','けん')}は？`,a:'高知県',choices:['高知県','愛媛県','徳島県','香川県'],hint:'坂本龍馬の出身地です',diff:3},
-    {q:`${R('九州地方','きゅうしゅうちほう')}で${R('最も','もっとも')}${R('面積','めんせき')}が${R('大','おお')}きい${R('県','けん')}は？`,a:'鹿児島県',choices:['鹿児島県','熊本県','大分県','宮崎県'],hint:'桜島がある県です',diff:3},
-    {q:`${R('信州','しんしゅう')}ともよばれる${R('都道府県','とどうふけん')}は？`,a:'長野県',choices:['長野県','山梨県','新潟県','富山県'],hint:'アルプス山脈がある内陸の県です',diff:2},
-    {q:`${R('北海道','ほっかいどう')}に${R('隣接','りんせつ')}する${R('都道府県','とどうふけん')}は？`,a:'青森県（津軽海峡をはさむ）',choices:['青森県（津軽海峡をはさむ）','岩手県','秋田県','山形県'],hint:'青函トンネルでつながっています',diff:3},
+    {q:`${R('本州最北端','ほんしゅうさいほくたん')}にある${R('半島','はんとう')}がある${R('県','けん')}は？`,a:'青森県',choices:['青森県','岩手県','秋田県','宮城県'],hint:'下北半島と津軽半島があります',diff:3,pref:'青森県'},
+    {q:`${R('四国','しこく')}で${R('最も','もっとも')}${R('面積','めんせき')}が${R('大','おお')}きい${R('県','けん')}は？`,a:'高知県',choices:['高知県','愛媛県','徳島県','香川県'],hint:'坂本龍馬の出身地です',diff:3,pref:'高知県'},
+    {q:`${R('九州地方','きゅうしゅうちほう')}で${R('最も','もっとも')}${R('面積','めんせき')}が${R('大','おお')}きい${R('県','けん')}は？`,a:'鹿児島県',choices:['鹿児島県','熊本県','大分県','宮崎県'],hint:'桜島がある県です',diff:3,pref:'鹿児島県'},
+    {q:`${R('信州','しんしゅう')}ともよばれる${R('都道府県','とどうふけん')}は？`,a:'長野県',choices:['長野県','山梨県','新潟県','富山県'],hint:'アルプス山脈がある内陸の県です',diff:2,pref:'長野県'},
+    {q:`${R('北海道','ほっかいどう')}に${R('隣接','りんせつ')}する${R('都道府県','とどうふけん')}は？`,a:'青森県（津軽海峡をはさむ）',choices:['青森県（津軽海峡をはさむ）','岩手県','秋田県','山形県'],hint:'青函トンネルでつながっています',diff:3,pref:'北海道'},
 
     // ── 追加30問（別名・歴史・地形・産業・隣接・形） ──
     // ★ やさしい
-    {q:`${R('東京','とうきょう')}タワーがある${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','神奈川県','埼玉県','千葉県'],hint:'日本の首都にあります',diff:1},
+    {q:`${R('東京','とうきょう')}タワーがある${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','神奈川県','埼玉県','千葉県'],hint:'日本の首都にあります',diff:1,pref:'東京都'},
     {q:`${R('富士山','ふじさん')}がある${R('都道府県','とどうふけん')}は？`,a:'静岡県と山梨県',choices:['静岡県と山梨県','長野県と山梨県','静岡県と長野県','神奈川県と山梨県'],hint:'２つの県にまたがっています',diff:1},
-    {q:`${R('日本','にほん')}で${R('唯一','ゆいいつ')}"${R('道','どう')}"がつく${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','東海道','山陰道','北陸道'],hint:'日本最北の都道府県です',diff:1},
+    {q:`${R('日本','にほん')}で${R('唯一','ゆいいつ')}"${R('道','どう')}"がつく${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','東海道','山陰道','北陸道'],hint:'日本最北の都道府県です',diff:1,pref:'北海道'},
     {q:`${R('おきなわ','おきなわ')}の${R('海','うみ')}といえば${R('何','なに')}${R('色','いろ')}？`,a:'エメラルドグリーン',choices:['エメラルドグリーン','どろどろの茶色','ふかい紺色','まっしろ'],hint:'サンゴ礁がある美しい海です',diff:1},
-    {q:`${R('広島県','ひろしまけん')}の${R('名物','めいぶつ')}は？`,a:'お好み焼き',choices:['お好み焼き','たこやき','もんじゃ焼き','焼きそば'],hint:'広島風として有名です',diff:1},
-    {q:`${R('大阪府','おおさかふ')}の${R('別名','べつめい')}は？`,a:'天下の台所',choices:['天下の台所','百万都市','海の都','商人の国'],hint:'食文化と商業が栄えた場所です',diff:1},
-    {q:`${R('長崎県','ながさきけん')}にある${R('世界遺産','せかいいさん')}の${R('島','しま')}は？`,a:'軍艦島（端島）',choices:['軍艦島（端島）','屋久島','小笠原諸島','佐渡島'],hint:'廃墟となった炭鉱の島です',diff:1},
-    {q:`${R('北海道','ほっかいどう')}の${R('有名','ゆうめい')}な${R('花畑','はなばたけ')}がある${R('街','まち')}は？`,a:'富良野市',choices:['富良野市','札幌市','函館市','旭川市'],hint:'ラベンダー畑が有名です',diff:1},
-    {q:`${R('岩手県','いわてけん')}の${R('有名','ゆうめい')}な${R('麺','めん')}は？`,a:'わんこそば',choices:['わんこそば','冷麺','稲庭うどん','ひっぱりうどん'],hint:'次々とそばをつがれます',diff:1},
-    {q:`${R('京都府','きょうとふ')}の${R('有名','ゆうめい')}な${R('お寺','おてら')}は？`,a:'金閣寺',choices:['金閣寺','東大寺','善光寺','浅草寺'],hint:'金色に輝くお寺です',diff:1},
+    {q:`${R('広島県','ひろしまけん')}の${R('名物','めいぶつ')}は？`,a:'お好み焼き',choices:['お好み焼き','たこやき','もんじゃ焼き','焼きそば'],hint:'広島風として有名です',diff:1,pref:'広島県'},
+    {q:`${R('大阪府','おおさかふ')}の${R('別名','べつめい')}は？`,a:'天下の台所',choices:['天下の台所','百万都市','海の都','商人の国'],hint:'食文化と商業が栄えた場所です',diff:1,pref:'大阪府'},
+    {q:`${R('長崎県','ながさきけん')}にある${R('世界遺産','せかいいさん')}の${R('島','しま')}は？`,a:'軍艦島（端島）',choices:['軍艦島（端島）','屋久島','小笠原諸島','佐渡島'],hint:'廃墟となった炭鉱の島です',diff:1,pref:'長崎県'},
+    {q:`${R('北海道','ほっかいどう')}の${R('有名','ゆうめい')}な${R('花畑','はなばたけ')}がある${R('街','まち')}は？`,a:'富良野市',choices:['富良野市','札幌市','函館市','旭川市'],hint:'ラベンダー畑が有名です',diff:1,pref:'北海道'},
+    {q:`${R('岩手県','いわてけん')}の${R('有名','ゆうめい')}な${R('麺','めん')}は？`,a:'わんこそば',choices:['わんこそば','冷麺','稲庭うどん','ひっぱりうどん'],hint:'次々とそばをつがれます',diff:1,pref:'岩手県'},
+    {q:`${R('京都府','きょうとふ')}の${R('有名','ゆうめい')}な${R('お寺','おてら')}は？`,a:'金閣寺',choices:['金閣寺','東大寺','善光寺','浅草寺'],hint:'金色に輝くお寺です',diff:1,pref:'京都府'},
     // ★★ ふつう
     {q:`${R('旧国名','きゅうこくめい')}「${R('陸奥','むつ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'青森県・岩手県・宮城県・福島県',choices:['青森県・岩手県・宮城県・福島県','青森県・秋田県','岩手県・宮城県','福島県・茨城県'],hint:'東北の太平洋側エリアです',diff:2},
-    {q:`${R('旧国名','きゅうこくめい')}「${R('薩摩','さつま')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'鹿児島県',choices:['鹿児島県','宮崎県','熊本県','大分県'],hint:'西郷隆盛の出身地です',diff:2},
-    {q:`${R('旧国名','きゅうこくめい')}「${R('土佐','とさ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'高知県',choices:['高知県','愛媛県','徳島県','香川県'],hint:'坂本龍馬の出身地です',diff:2},
-    {q:`${R('旧国名','きゅうこくめい')}「${R('越後','えちご')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'新潟県',choices:['新潟県','富山県','石川県','長野県'],hint:'上杉謙信の故郷です',diff:2},
-    {q:`${R('旧国名','きゅうこくめい')}「${R('甲斐','かい')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'山梨県',choices:['山梨県','長野県','静岡県','神奈川県'],hint:'武田信玄の故郷です',diff:2},
-    {q:`${R('旧国名','きゅうこくめい')}「${R('伊予','いよ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'愛媛県',choices:['愛媛県','高知県','徳島県','香川県'],hint:'みかんと道後温泉が有名です',diff:2},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('薩摩','さつま')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'鹿児島県',choices:['鹿児島県','宮崎県','熊本県','大分県'],hint:'西郷隆盛の出身地です',diff:2,pref:'鹿児島県'},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('土佐','とさ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'高知県',choices:['高知県','愛媛県','徳島県','香川県'],hint:'坂本龍馬の出身地です',diff:2,pref:'高知県'},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('越後','えちご')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'新潟県',choices:['新潟県','富山県','石川県','長野県'],hint:'上杉謙信の故郷です',diff:2,pref:'新潟県'},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('甲斐','かい')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'山梨県',choices:['山梨県','長野県','静岡県','神奈川県'],hint:'武田信玄の故郷です',diff:2,pref:'山梨県'},
+    {q:`${R('旧国名','きゅうこくめい')}「${R('伊予','いよ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'愛媛県',choices:['愛媛県','高知県','徳島県','香川県'],hint:'みかんと道後温泉が有名です',diff:2,pref:'愛媛県'},
     {q:`${R('旧国名','きゅうこくめい')}「${R('武蔵','むさし')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'東京都・埼玉県',choices:['東京都・埼玉県','東京都・神奈川県','埼玉県・千葉県','東京都・千葉県'],hint:'江戸があったエリアです',diff:2},
-    {q:`${R('鍋料理','なべりょうり')}「もつ鍋」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'福岡県',choices:['福岡県','熊本県','大分県','佐賀県'],hint:'博多が発祥といわれます',diff:2},
-    {q:`${R('自動車','じどうしゃ')}${R('生産','せいさん')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'愛知県',choices:['愛知県','神奈川県','静岡県','群馬県'],hint:'トヨタ自動車の本社があります',diff:2},
-    {q:`${R('日本一','にほんいち')}${R('深','ふか')}い${R('湖','みずうみ')}「田沢湖」がある${R('都道府県','とどうふけん')}は？`,a:'秋田県',choices:['秋田県','青森県','岩手県','山形県'],hint:'なまはげが有名な県です',diff:2},
+    {q:`${R('鍋料理','なべりょうり')}「もつ鍋」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'福岡県',choices:['福岡県','熊本県','大分県','佐賀県'],hint:'博多が発祥といわれます',diff:2,pref:'福岡県'},
+    {q:`${R('自動車','じどうしゃ')}${R('生産','せいさん')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'愛知県',choices:['愛知県','神奈川県','静岡県','群馬県'],hint:'トヨタ自動車の本社があります',diff:2,pref:'愛知県'},
+    {q:`${R('日本一','にほんいち')}${R('深','ふか')}い${R('湖','みずうみ')}「田沢湖」がある${R('都道府県','とどうふけん')}は？`,a:'秋田県',choices:['秋田県','青森県','岩手県','山形県'],hint:'なまはげが有名な県です',diff:2,pref:'秋田県'},
     {q:`${R('日本','にほん')}で${R('最初','さいしょ')}に${R('世界遺産','せかいいさん')}に${R('登録','とうろく')}された${R('都道府県','とどうふけん')}はどれ？`,a:'奈良県（法隆寺）',choices:['奈良県（法隆寺）','京都府（金閣寺）','広島県（厳島神社）','東京都（日光）'],hint:'1993年に登録されました',diff:2},
     {q:`${R('日本','にほん')}の${R('都道府県','とどうふけん')}で${R('最も','もっとも')}${R('東','ひがし')}にあるのは？`,a:'北海道（択捉島）',choices:['北海道（択捉島）','東京都（南鳥島）','岩手県','青森県'],hint:'北方領土を含みます',diff:2},
-    {q:`${R('岐阜県','ぎふけん')}と${R('富山県','とやまけん')}にまたがる${R('世界遺産','せかいいさん')}は？`,a:'白川郷・五箇山の合掌造り集落',choices:['白川郷・五箇山の合掌造り集落','白神山地','屋久島','熊野古道'],hint:'雪深い山村の家々が有名です',diff:2},
-    {q:`${R('さつまいも','さつまいも')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'鹿児島県',choices:['鹿児島県','千葉県','茨城県','宮崎県'],hint:'桜島がある南の県です',diff:2},
-    {q:`${R('りんご','りんご')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'青森県',choices:['青森県','長野県','岩手県','山形県'],hint:'ねぶた祭りが有名な県です',diff:2},
+    {q:`${R('岐阜県','ぎふけん')}と${R('富山県','とやまけん')}にまたがる${R('世界遺産','せかいいさん')}は？`,a:'白川郷・五箇山の合掌造り集落',choices:['白川郷・五箇山の合掌造り集落','白神山地','屋久島','熊野古道'],hint:'雪深い山村の家々が有名です',diff:2,pref:'岐阜県'},
+    {q:`${R('さつまいも','さつまいも')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'鹿児島県',choices:['鹿児島県','千葉県','茨城県','宮崎県'],hint:'桜島がある南の県です',diff:2,pref:'鹿児島県'},
+    {q:`${R('りんご','りんご')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'青森県',choices:['青森県','長野県','岩手県','山形県'],hint:'ねぶた祭りが有名な県です',diff:2,pref:'青森県'},
     // ★★★ むずかしい
     {q:`${R('旧国名','きゅうこくめい')}「${R('出羽','でわ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'山形県・秋田県',choices:['山形県・秋田県','岩手県・秋田県','青森県・秋田県','山形県・宮城県'],hint:'東北地方の日本海側です',diff:3},
     {q:`${R('旧国名','きゅうこくめい')}「${R('遠江','とおとうみ')}」は${R('現在','げんざい')}の${R('何県','なにけん')}？`,a:'静岡県（西部）',choices:['静岡県（西部）','愛知県','神奈川県','山梨県'],hint:'浜松市がある地域です',diff:3},
-    {q:`${R('都道府県','とどうふけん')}の${R('形','かたち')}が「${R('ブーツ','ブーツ')}」に${R('似','に')}ているのは？`,a:'千葉県',choices:['千葉県','神奈川県','静岡県','茨城県'],hint:'房総半島が細長く伸びています',diff:3},
-    {q:`${R('都道府県','とどうふけん')}の${R('形','かたち')}が「${R('金魚','きんぎょ')}」に${R('似','に')}ているのは？`,a:'奈良県',choices:['奈良県','滋賀県','三重県','和歌山県'],hint:'内陸にある古都の県です',diff:3},
+    {q:`${R('都道府県','とどうふけん')}の${R('形','かたち')}が「${R('ブーツ','ブーツ')}」に${R('似','に')}ているのは？`,a:'千葉県',choices:['千葉県','神奈川県','静岡県','茨城県'],hint:'房総半島が細長く伸びています',diff:3,pref:'千葉県'},
+    {q:`${R('都道府県','とどうふけん')}の${R('形','かたち')}が「${R('金魚','きんぎょ')}」に${R('似','に')}ているのは？`,a:'奈良県',choices:['奈良県','滋賀県','三重県','和歌山県'],hint:'内陸にある古都の県です',diff:3,pref:'奈良県'},
     {q:`${R('全国','ぜんこく')}で「${R('県','けん')}」がつかない${R('都道府県','とどうふけん')}はいくつ？`,a:'４つ（東京都・北海道・大阪府・京都府）',choices:['４つ（東京都・北海道・大阪府・京都府）','２つ','３つ','５つ'],hint:'都・道・府がつく場所です',diff:3},
     {q:`${R('日本','にほん')}で${R('平成','へいせい')}に${R('生','う')}まれた${R('市','し')}が${R('県庁所在地','けんちょうしょざいち')}になっている${R('都道府県','とどうふけん')}は？`,a:'埼玉県（さいたま市・2001年）',choices:['埼玉県（さいたま市・2001年）','神奈川県（横浜市）','千葉県（千葉市）','大阪府（大阪市）'],hint:'複数の市が合併して誕生しました',diff:3},
     {q:`${R('隣接','りんせつ')}する${R('都道府県','とどうふけん')}の${R('数','かず')}が${R('最も','もっとも')}${R('多','おお')}い${R('都道府県','とどうふけん')}は？`,a:'長野県（８県と隣接）',choices:['長野県（８県と隣接）','岐阜県（７県と隣接）','埼玉県（６県と隣接）','栃木県（６県と隣接）'],hint:'内陸の大きな県です',diff:3},
+    // ── 追加14問（県マスター拡充：一般トリビア） ──
+    {q:`${R('宮城県','みやぎけん')}にある${R('日本三景','にほんさんけい')}のひとつは？`,a:'松島',choices:['松島','天橋立','宮島','三保松原'],hint:'たくさんの島がうかぶ景色で有名です',diff:1,pref:'宮城県'},
+    {q:`${R('福島県','ふくしまけん')}にある${R('幕末','ばくまつ')}の${R('戦','たたか')}いの${R('舞台','ぶたい')}になった${R('城','しろ')}は？`,a:'鶴ヶ城',choices:['鶴ヶ城','白河小峰城','二本松城','三春城'],hint:'別名「会津若松城」です',diff:2,pref:'福島県'},
+    {q:`${R('納豆','なっとう')}の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'茨城県',choices:['茨城県','栃木県','埼玉県','群馬県'],hint:'水戸納豆が有名です',diff:2,pref:'茨城県'},
+    {q:`${R('世界遺産','せかいいさん')}「${R('富岡製糸場','とみおかせいしじょう')}」がある${R('都道府県','とどうふけん')}は？`,a:'群馬県',choices:['群馬県','埼玉県','栃木県','長野県'],hint:'生糸をつくる工場でした',diff:2,pref:'群馬県'},
+    {q:`「${R('小江戸','こえど')}」とよばれる${R('街','まち')}がある${R('都道府県','とどうふけん')}は？`,a:'埼玉県',choices:['埼玉県','千葉県','東京都','神奈川県'],hint:'川越市が有名です',diff:2,pref:'埼玉県'},
+    {q:`${R('黒部','くろべ')}ダムがある${R('都道府県','とどうふけん')}は？`,a:'富山県',choices:['富山県','長野県','新潟県','岐阜県'],hint:'黒部峡谷にある巨大なダムです',diff:2,pref:'富山県'},
+    {q:`${R('日本三名園','にほんさんめいえん')}のひとつ「${R('兼六園','けんろくえん')}」がある${R('都道府県','とどうふけん')}は？`,a:'石川県',choices:['石川県','富山県','福井県','新潟県'],hint:'金沢市にあります',diff:1,pref:'石川県'},
+    {q:`${R('めがね','めがね')}のフレーム${R('生産','せいさん')}で${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'福井県',choices:['福井県','石川県','富山県','新潟県'],hint:'鯖江市が有名です',diff:3,pref:'福井県'},
+    {q:`${R('うなぎ','うなぎ')}の${R('養殖','ようしょく')}で${R('有名','ゆうめい')}な${R('湖','みずうみ')}「${R('浜名湖','はまなこ')}」がある${R('都道府県','とどうふけん')}は？`,a:'静岡県',choices:['静岡県','愛知県','三重県','岐阜県'],hint:'鰻料理が名物です',diff:2,pref:'静岡県'},
+    {q:`${R('日本人','にほんじん')}の${R('心','こころ')}のふるさとといわれる「${R('伊勢神宮','いせじんぐう')}」がある${R('都道府県','とどうふけん')}は？`,a:'三重県',choices:['三重県','奈良県','和歌山県','愛知県'],hint:'お伊勢参りで有名です',diff:1,pref:'三重県'},
+    {q:`${R('世界遺産','せかいいさん')}「${R('姫路城','ひめじじょう')}」がある${R('都道府県','とどうふけん')}は？`,a:'兵庫県',choices:['兵庫県','岡山県','京都府','奈良県'],hint:'白鷺城ともよばれます',diff:1,pref:'兵庫県'},
+    {q:`${R('ふぐ','ふぐ')}りょうりで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'山口県',choices:['山口県','福岡県','広島県','島根県'],hint:'下関市が特に有名です',diff:2,pref:'山口県'},
+    {q:`${R('加藤清正','かとうきよまさ')}が${R('築','きず')}いた${R('名城','めいじょう')}「${R('熊本城','くまもとじょう')}」がある${R('都道府県','とどうふけん')}は？`,a:'熊本県',choices:['熊本県','大分県','宮崎県','鹿児島県'],hint:'武将ゆかりの立派な城です',diff:2,pref:'熊本県'},
+    {q:`${R('天照大神','あまてらすおおみかみ')}の${R('神話','しんわ')}で${R('有名','ゆうめい')}な${R('渓谷','けいこく')}「${R('高千穂峡','たかちほきょう')}」がある${R('都道府県','とどうふけん')}は？`,a:'宮崎県',choices:['宮崎県','鹿児島県','大分県','熊本県'],hint:'神話の里とよばれます',diff:2,pref:'宮崎県'},
   ],
   capital:[
-    {q:`${R('北海道','ほっかいどう')}の${R('道庁所在地','どうちょうしょざいち')}は？`,a:'札幌市',choices:['札幌市','函館市','旭川市','釧路市'],hint:'雪まつりが有名な市です',diff:1},
-    {q:`${R('青森県','あおもりけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'青森市',choices:['青森市','弘前市','八戸市','十和田市'],hint:'ねぶた祭りが有名な都市です',diff:1},
-    {q:`${R('岩手県','いわてけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'盛岡市',choices:['盛岡市','花巻市','一関市','北上市'],hint:'冷麺とわんこそばが有名です',diff:2},
-    {q:`${R('宮城県','みやぎけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'仙台市',choices:['仙台市','石巻市','気仙沼市','多賀城市'],hint:'七夕まつりと牛タンが有名です',diff:1},
-    {q:`${R('秋田県','あきたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'秋田市',choices:['秋田市','横手市','大仙市','能代市'],hint:'なまはげで有名な県の中心都市です',diff:1},
-    {q:`${R('山形県','やまがたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'山形市',choices:['山形市','鶴岡市','酒田市','米沢市'],hint:'さくらんぼで有名な県の中心都市です',diff:1},
-    {q:`${R('福島県','ふくしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'福島市',choices:['福島市','郡山市','いわき市','会津若松市'],hint:'東北地方最南端の県の中心都市です',diff:1},
-    {q:`${R('茨城県','いばらきけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'水戸市',choices:['水戸市','つくば市','日立市','土浦市'],hint:'偕楽園の梅が有名な都市です',diff:2},
-    {q:`${R('栃木県','とちぎけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'宇都宮市',choices:['宇都宮市','小山市','栃木市','足利市'],hint:'餃子の消費量が日本一の都市です',diff:2},
-    {q:`${R('群馬県','ぐんまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'前橋市',choices:['前橋市','高崎市','太田市','伊勢崎市'],hint:'草津温泉がある県の県庁所在地です',diff:2},
-    {q:`${R('埼玉県','さいたまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'さいたま市',choices:['さいたま市','川越市','川口市','越谷市'],hint:'2001年に誕生した政令指定都市です',diff:2},
-    {q:`${R('千葉県','ちばけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'千葉市',choices:['千葉市','船橋市','松戸市','柏市'],hint:'県名と同じ名前の都市です',diff:1},
-    {q:`${R('東京都','とうきょうと')}の${R('都庁','とちょう')}がある${R('区','く')}は？`,a:'新宿区',choices:['新宿区','千代田区','渋谷区','港区'],hint:'都庁ビルがある場所です',diff:3},
-    {q:`${R('神奈川県','かながわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'横浜市',choices:['横浜市','川崎市','相模原市','横須賀市'],hint:'中華街が有名な都市です',diff:1},
-    {q:`${R('新潟県','にいがたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'新潟市',choices:['新潟市','長岡市','上越市','三条市'],hint:'日本海側最大の都市です',diff:2},
-    {q:`${R('富山県','とやまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'富山市',choices:['富山市','高岡市','射水市','南砺市'],hint:'薬売りで有名な県の中心都市です',diff:2},
-    {q:`${R('石川県','いしかわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'金沢市',choices:['金沢市','七尾市','小松市','白山市'],hint:'兼六園が有名な都市です',diff:1},
-    {q:`${R('福井県','ふくいけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'福井市',choices:['福井市','敦賀市','小浜市','越前市'],hint:'恐竜博物館に近い都市です',diff:2},
-    {q:`${R('山梨県','やまなしけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'甲府市',choices:['甲府市','富士吉田市','都留市','大月市'],hint:'武田信玄ゆかりの都市です',diff:2},
-    {q:`${R('長野県','ながのけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'長野市',choices:['長野市','松本市','上田市','飯田市'],hint:'善光寺がある都市です',diff:2},
-    {q:`${R('岐阜県','ぎふけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'岐阜市',choices:['岐阜市','大垣市','高山市','各務原市'],hint:'鵜飼いが有名な都市です',diff:2},
-    {q:`${R('静岡県','しずおかけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'静岡市',choices:['静岡市','浜松市','沼津市','富士市'],hint:'お茶とみかんで有名な都市です',diff:1},
-    {q:`${R('愛知県','あいちけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'名古屋市',choices:['名古屋市','豊田市','岡崎市','一宮市'],hint:'名古屋城がある都市です',diff:1},
-    {q:`${R('三重県','みえけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'津市',choices:['津市','四日市市','鈴鹿市','松阪市'],hint:'日本一短い地名の県庁所在地です',diff:3},
-    {q:`${R('滋賀県','しがけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'大津市',choices:['大津市','草津市','彦根市','近江八幡市'],hint:'琵琶湖のほとりにある都市です',diff:2},
-    {q:`${R('京都府','きょうとふ')}の${R('府庁所在地','ふちょうしょざいち')}は？`,a:'京都市',choices:['京都市','宇治市','亀岡市','長岡京市'],hint:'千年の都がある都市です',diff:1},
-    {q:`${R('大阪府','おおさかふ')}の${R('府庁所在地','ふちょうしょざいち')}は？`,a:'大阪市',choices:['大阪市','堺市','枚方市','高槻市'],hint:'道頓堀がある都市です',diff:1},
-    {q:`${R('兵庫県','ひょうごけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'神戸市',choices:['神戸市','姫路市','西宮市','尼崎市'],hint:'港町として有名な都市です',diff:1},
-    {q:`${R('奈良県','ならけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'奈良市',choices:['奈良市','橿原市','大和高田市','桜井市'],hint:'東大寺・春日大社がある都市です',diff:1},
-    {q:`${R('和歌山県','わかやまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'和歌山市',choices:['和歌山市','田辺市','新宮市','橋本市'],hint:'和歌山城がある都市です',diff:2},
-    {q:`${R('鳥取県','とっとりけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'鳥取市',choices:['鳥取市','米子市','倉吉市','境港市'],hint:'砂丘に近い都市です',diff:2},
-    {q:`${R('島根県','しまねけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'松江市',choices:['松江市','出雲市','浜田市','益田市'],hint:'宍道湖のそばにある都市です',diff:2},
-    {q:`${R('岡山県','おかやまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'岡山市',choices:['岡山市','倉敷市','津山市','笠岡市'],hint:'後楽園がある都市です',diff:1},
-    {q:`${R('広島県','ひろしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'広島市',choices:['広島市','福山市','呉市','尾道市'],hint:'平和記念公園がある都市です',diff:1},
-    {q:`${R('山口県','やまぐちけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'山口市',choices:['山口市','下関市','防府市','宇部市'],hint:'県名と同じ名前の都市です',diff:2},
-    {q:`${R('徳島県','とくしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'徳島市',choices:['徳島市','鳴門市','阿南市','吉野川市'],hint:'阿波おどりが有名な都市です',diff:2},
-    {q:`${R('香川県','かがわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'高松市',choices:['高松市','丸亀市','坂出市','善通寺市'],hint:'うどんの聖地にある都市です',diff:1},
-    {q:`${R('愛媛県','えひめけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'松山市',choices:['松山市','今治市','新居浜市','宇和島市'],hint:'道後温泉がある都市です',diff:1},
-    {q:`${R('高知県','こうちけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'高知市',choices:['高知市','南国市','四万十市','香南市'],hint:'坂本龍馬ゆかりの都市です',diff:1},
-    {q:`${R('福岡県','ふくおかけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'福岡市',choices:['福岡市','北九州市','久留米市','飯塚市'],hint:'博多ラーメンが有名な都市です',diff:1},
-    {q:`${R('佐賀県','さがけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'佐賀市',choices:['佐賀市','唐津市','鳥栖市','武雄市'],hint:'有田焼の近くにある都市です',diff:2},
-    {q:`${R('長崎県','ながさきけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'長崎市',choices:['長崎市','佐世保市','諫早市','大村市'],hint:'坂の町と出島が有名です',diff:1},
-    {q:`${R('熊本県','くまもとけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'熊本市',choices:['熊本市','八代市','天草市','玉名市'],hint:'くまモンのいる都市です',diff:1},
-    {q:`${R('大分県','おおいたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'大分市',choices:['大分市','別府市','中津市','佐伯市'],hint:'温泉の数が日本一の県の中心都市です',diff:2},
-    {q:`${R('宮崎県','みやざきけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'宮崎市',choices:['宮崎市','都城市','延岡市','日南市'],hint:'マンゴーの産地で有名な県の中心都市',diff:2},
-    {q:`${R('鹿児島県','かごしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'鹿児島市',choices:['鹿児島市','霧島市','薩摩川内市','姶良市'],hint:'桜島がすぐそばにある都市です',diff:1},
-    {q:`${R('沖縄県','おきなわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'那覇市',choices:['那覇市','宜野湾市','沖縄市','浦添市'],hint:'首里城がある都市です',diff:1},
+    {q:`${R('北海道','ほっかいどう')}の${R('道庁所在地','どうちょうしょざいち')}は？`,a:'札幌市',choices:['札幌市','函館市','旭川市','釧路市'],hint:'雪まつりが有名な市です',diff:1,pref:'北海道'},
+    {q:`${R('青森県','あおもりけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'青森市',choices:['青森市','弘前市','八戸市','十和田市'],hint:'ねぶた祭りが有名な都市です',diff:1,pref:'青森県'},
+    {q:`${R('岩手県','いわてけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'盛岡市',choices:['盛岡市','花巻市','一関市','北上市'],hint:'冷麺とわんこそばが有名です',diff:2,pref:'岩手県'},
+    {q:`${R('宮城県','みやぎけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'仙台市',choices:['仙台市','石巻市','気仙沼市','多賀城市'],hint:'七夕まつりと牛タンが有名です',diff:1,pref:'宮城県'},
+    {q:`${R('秋田県','あきたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'秋田市',choices:['秋田市','横手市','大仙市','能代市'],hint:'なまはげで有名な県の中心都市です',diff:1,pref:'秋田県'},
+    {q:`${R('山形県','やまがたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'山形市',choices:['山形市','鶴岡市','酒田市','米沢市'],hint:'さくらんぼで有名な県の中心都市です',diff:1,pref:'山形県'},
+    {q:`${R('福島県','ふくしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'福島市',choices:['福島市','郡山市','いわき市','会津若松市'],hint:'東北地方最南端の県の中心都市です',diff:1,pref:'福島県'},
+    {q:`${R('茨城県','いばらきけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'水戸市',choices:['水戸市','つくば市','日立市','土浦市'],hint:'偕楽園の梅が有名な都市です',diff:2,pref:'茨城県'},
+    {q:`${R('栃木県','とちぎけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'宇都宮市',choices:['宇都宮市','小山市','栃木市','足利市'],hint:'餃子の消費量が日本一の都市です',diff:2,pref:'栃木県'},
+    {q:`${R('群馬県','ぐんまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'前橋市',choices:['前橋市','高崎市','太田市','伊勢崎市'],hint:'草津温泉がある県の県庁所在地です',diff:2,pref:'群馬県'},
+    {q:`${R('埼玉県','さいたまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'さいたま市',choices:['さいたま市','川越市','川口市','越谷市'],hint:'2001年に誕生した政令指定都市です',diff:2,pref:'埼玉県'},
+    {q:`${R('千葉県','ちばけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'千葉市',choices:['千葉市','船橋市','松戸市','柏市'],hint:'県名と同じ名前の都市です',diff:1,pref:'千葉県'},
+    {q:`${R('東京都','とうきょうと')}の${R('都庁','とちょう')}がある${R('区','く')}は？`,a:'新宿区',choices:['新宿区','千代田区','渋谷区','港区'],hint:'都庁ビルがある場所です',diff:3,pref:'東京都'},
+    {q:`${R('神奈川県','かながわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'横浜市',choices:['横浜市','川崎市','相模原市','横須賀市'],hint:'中華街が有名な都市です',diff:1,pref:'神奈川県'},
+    {q:`${R('新潟県','にいがたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'新潟市',choices:['新潟市','長岡市','上越市','三条市'],hint:'日本海側最大の都市です',diff:2,pref:'新潟県'},
+    {q:`${R('富山県','とやまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'富山市',choices:['富山市','高岡市','射水市','南砺市'],hint:'薬売りで有名な県の中心都市です',diff:2,pref:'富山県'},
+    {q:`${R('石川県','いしかわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'金沢市',choices:['金沢市','七尾市','小松市','白山市'],hint:'兼六園が有名な都市です',diff:1,pref:'石川県'},
+    {q:`${R('福井県','ふくいけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'福井市',choices:['福井市','敦賀市','小浜市','越前市'],hint:'恐竜博物館に近い都市です',diff:2,pref:'福井県'},
+    {q:`${R('山梨県','やまなしけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'甲府市',choices:['甲府市','富士吉田市','都留市','大月市'],hint:'武田信玄ゆかりの都市です',diff:2,pref:'山梨県'},
+    {q:`${R('長野県','ながのけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'長野市',choices:['長野市','松本市','上田市','飯田市'],hint:'善光寺がある都市です',diff:2,pref:'長野県'},
+    {q:`${R('岐阜県','ぎふけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'岐阜市',choices:['岐阜市','大垣市','高山市','各務原市'],hint:'鵜飼いが有名な都市です',diff:2,pref:'岐阜県'},
+    {q:`${R('静岡県','しずおかけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'静岡市',choices:['静岡市','浜松市','沼津市','富士市'],hint:'お茶とみかんで有名な都市です',diff:1,pref:'静岡県'},
+    {q:`${R('愛知県','あいちけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'名古屋市',choices:['名古屋市','豊田市','岡崎市','一宮市'],hint:'名古屋城がある都市です',diff:1,pref:'愛知県'},
+    {q:`${R('三重県','みえけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'津市',choices:['津市','四日市市','鈴鹿市','松阪市'],hint:'日本一短い地名の県庁所在地です',diff:3,pref:'三重県'},
+    {q:`${R('滋賀県','しがけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'大津市',choices:['大津市','草津市','彦根市','近江八幡市'],hint:'琵琶湖のほとりにある都市です',diff:2,pref:'滋賀県'},
+    {q:`${R('京都府','きょうとふ')}の${R('府庁所在地','ふちょうしょざいち')}は？`,a:'京都市',choices:['京都市','宇治市','亀岡市','長岡京市'],hint:'千年の都がある都市です',diff:1,pref:'京都府'},
+    {q:`${R('大阪府','おおさかふ')}の${R('府庁所在地','ふちょうしょざいち')}は？`,a:'大阪市',choices:['大阪市','堺市','枚方市','高槻市'],hint:'道頓堀がある都市です',diff:1,pref:'大阪府'},
+    {q:`${R('兵庫県','ひょうごけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'神戸市',choices:['神戸市','姫路市','西宮市','尼崎市'],hint:'港町として有名な都市です',diff:1,pref:'兵庫県'},
+    {q:`${R('奈良県','ならけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'奈良市',choices:['奈良市','橿原市','大和高田市','桜井市'],hint:'東大寺・春日大社がある都市です',diff:1,pref:'奈良県'},
+    {q:`${R('和歌山県','わかやまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'和歌山市',choices:['和歌山市','田辺市','新宮市','橋本市'],hint:'和歌山城がある都市です',diff:2,pref:'和歌山県'},
+    {q:`${R('鳥取県','とっとりけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'鳥取市',choices:['鳥取市','米子市','倉吉市','境港市'],hint:'砂丘に近い都市です',diff:2,pref:'鳥取県'},
+    {q:`${R('島根県','しまねけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'松江市',choices:['松江市','出雲市','浜田市','益田市'],hint:'宍道湖のそばにある都市です',diff:2,pref:'島根県'},
+    {q:`${R('岡山県','おかやまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'岡山市',choices:['岡山市','倉敷市','津山市','笠岡市'],hint:'後楽園がある都市です',diff:1,pref:'岡山県'},
+    {q:`${R('広島県','ひろしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'広島市',choices:['広島市','福山市','呉市','尾道市'],hint:'平和記念公園がある都市です',diff:1,pref:'広島県'},
+    {q:`${R('山口県','やまぐちけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'山口市',choices:['山口市','下関市','防府市','宇部市'],hint:'県名と同じ名前の都市です',diff:2,pref:'山口県'},
+    {q:`${R('徳島県','とくしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'徳島市',choices:['徳島市','鳴門市','阿南市','吉野川市'],hint:'阿波おどりが有名な都市です',diff:2,pref:'徳島県'},
+    {q:`${R('香川県','かがわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'高松市',choices:['高松市','丸亀市','坂出市','善通寺市'],hint:'うどんの聖地にある都市です',diff:1,pref:'香川県'},
+    {q:`${R('愛媛県','えひめけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'松山市',choices:['松山市','今治市','新居浜市','宇和島市'],hint:'道後温泉がある都市です',diff:1,pref:'愛媛県'},
+    {q:`${R('高知県','こうちけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'高知市',choices:['高知市','南国市','四万十市','香南市'],hint:'坂本龍馬ゆかりの都市です',diff:1,pref:'高知県'},
+    {q:`${R('福岡県','ふくおかけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'福岡市',choices:['福岡市','北九州市','久留米市','飯塚市'],hint:'博多ラーメンが有名な都市です',diff:1,pref:'福岡県'},
+    {q:`${R('佐賀県','さがけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'佐賀市',choices:['佐賀市','唐津市','鳥栖市','武雄市'],hint:'有田焼の近くにある都市です',diff:2,pref:'佐賀県'},
+    {q:`${R('長崎県','ながさきけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'長崎市',choices:['長崎市','佐世保市','諫早市','大村市'],hint:'坂の町と出島が有名です',diff:1,pref:'長崎県'},
+    {q:`${R('熊本県','くまもとけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'熊本市',choices:['熊本市','八代市','天草市','玉名市'],hint:'くまモンのいる都市です',diff:1,pref:'熊本県'},
+    {q:`${R('大分県','おおいたけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'大分市',choices:['大分市','別府市','中津市','佐伯市'],hint:'温泉の数が日本一の県の中心都市です',diff:2,pref:'大分県'},
+    {q:`${R('宮崎県','みやざきけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'宮崎市',choices:['宮崎市','都城市','延岡市','日南市'],hint:'マンゴーの産地で有名な県の中心都市',diff:2,pref:'宮崎県'},
+    {q:`${R('鹿児島県','かごしまけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'鹿児島市',choices:['鹿児島市','霧島市','薩摩川内市','姶良市'],hint:'桜島がすぐそばにある都市です',diff:1,pref:'鹿児島県'},
+    {q:`${R('沖縄県','おきなわけん')}の${R('県庁所在地','けんちょうしょざいち')}は？`,a:'那覇市',choices:['那覇市','宜野湾市','沖縄市','浦添市'],hint:'首里城がある都市です',diff:1,pref:'沖縄県'},
   ],
   region:[
     {q:`${R('日本','にほん')}は${R('全部','ぜんぶ')}で${R('何','いく')}つの${R('地方','ちほう')}に${R('分','わ')}かれている？`,a:'８地方',choices:['８地方','６地方','７地方','９地方'],hint:'北から北海道・東北・関東…',diff:1},
@@ -736,6 +975,64 @@ const QUESTIONS = {
     {q:`${R('伊豆大島','いずおおしま')}がある${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','神奈川県','静岡県','千葉県'],hint:'三原山がある島です',diff:2},
     {q:`${R('淡路島','あわじしま')}は${R('日本','にほん')}で${R('何番目','なんばんめ')}に${R('大','おお')}きい${R('島','しま')}？`,a:'7番目',choices:['7番目','3番目','5番目','10番目'],hint:'瀬戸内海最大の島です',diff:3},
   ],
+  specialty:[
+    // ★ やさしい
+    {q:`${R('北海道','ほっかいどう')}の${R('特産品','とくさんひん')}といえば？`,a:'とうもろこし',choices:['とうもろこし','パイナップル','みかん','バナナ'],hint:'夏に採れる甘い野菜です',diff:1,pref:'北海道'},
+    {q:`${R('青森県','あおもりけん')}の${R('特産品','とくさんひん')}といえば？`,a:'りんご',choices:['りんご','もも','ぶどう','なし'],hint:'赤くて甘いくだものです',diff:1,pref:'青森県'},
+    {q:`${R('山梨県','やまなしけん')}の${R('特産品','とくさんひん')}といえば？`,a:'ぶどう・もも',choices:['ぶどう・もも','りんご・なし','みかん・バナナ','いちご・すいか'],hint:'ワインの生産でも有名です',diff:1,pref:'山梨県'},
+    {q:`${R('静岡県','しずおかけん')}の${R('特産品','とくさんひん')}といえば？`,a:'お茶',choices:['お茶','コーヒー','紅茶','ココア'],hint:'茶畑がたくさんあります',diff:1,pref:'静岡県'},
+    {q:`${R('宇治茶','うじちゃ')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'京都府',choices:['京都府','静岡県','奈良県','三重県'],hint:'古都として知られる府です',diff:1,pref:'京都府'},
+    {q:`${R('博多明太子','はかためんたいこ')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'福岡県',choices:['福岡県','佐賀県','長崎県','大分県'],hint:'博多ラーメンでも有名です',diff:1,pref:'福岡県'},
+    {q:`${R('讃岐','さぬき')}うどんで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'香川県',choices:['香川県','徳島県','愛媛県','高知県'],hint:'うどん県ともよばれます',diff:1,pref:'香川県'},
+    {q:`${R('夕張','ゆうばり')}メロンで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'北海道',choices:['北海道','青森県','山形県','熊本県'],hint:'甘くてオレンジ色の果肉です',diff:1,pref:'北海道'},
+    {q:`${R('神戸牛','こうべぎゅう')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'兵庫県',choices:['兵庫県','大阪府','岡山県','鳥取県'],hint:'港町として有名な県です',diff:1,pref:'兵庫県'},
+    {q:`${R('信州','しんしゅう')}そばで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'長野県',choices:['長野県','山梨県','新潟県','群馬県'],hint:'高原の涼しい気候の県です',diff:1,pref:'長野県'},
+    {q:`${R('博多人形','はかたにんぎょう')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'福岡県',choices:['福岡県','佐賀県','熊本県','長崎県'],hint:'伝統工芸品として知られます',diff:1,pref:'福岡県'},
+    {q:`${R('あきたこまち','あきたこまち')}という${R('お米','おこめ')}の${R('産地','さんち')}は？`,a:'秋田県',choices:['秋田県','山形県','新潟県','岩手県'],hint:'なまはげで有名な県です',diff:1,pref:'秋田県'},
+    {q:`${R('魚沼産','うおぬまさん')}コシヒカリで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'新潟県',choices:['新潟県','秋田県','富山県','山形県'],hint:'日本一長い川がある県です',diff:1,pref:'新潟県'},
+    // ★★ ふつう
+    {q:`${R('輪島塗','わじまぬり')}という${R('伝統工芸品','でんとうこうげいひん')}の${R('都道府県','とどうふけん')}は？`,a:'石川県',choices:['石川県','富山県','福井県','新潟県'],hint:'能登半島がある県です',diff:2,pref:'石川県'},
+    {q:`${R('西陣織','にしじんおり')}という${R('伝統工芸品','でんとうこうげいひん')}の${R('都道府県','とどうふけん')}は？`,a:'京都府',choices:['京都府','滋賀県','奈良県','大阪府'],hint:'豪華な織物として知られます',diff:2,pref:'京都府'},
+    {q:`${R('南部鉄器','なんぶてっき')}という${R('伝統工芸品','でんとうこうげいひん')}の${R('都道府県','とどうふけん')}は？`,a:'岩手県',choices:['岩手県','宮城県','青森県','秋田県'],hint:'鉄びんが有名です',diff:2,pref:'岩手県'},
+    {q:`${R('九谷焼','くたにやき')}という${R('陶磁器','とうじき')}の${R('都道府県','とどうふけん')}は？`,a:'石川県',choices:['石川県','岐阜県','愛知県','滋賀県'],hint:'カラフルな絵付けが特徴です',diff:2,pref:'石川県'},
+    {q:`${R('美濃焼','みのやき')}という${R('陶磁器','とうじき')}の${R('都道府県','とどうふけん')}は？`,a:'岐阜県',choices:['岐阜県','愛知県','三重県','石川県'],hint:'白川郷がある県です',diff:2,pref:'岐阜県'},
+    {q:`${R('今治','いまばり')}タオルで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'愛媛県',choices:['愛媛県','香川県','徳島県','高知県'],hint:'みかんでも有名な四国の県です',diff:2,pref:'愛媛県'},
+    {q:`${R('美味しんぼ','おいしんぼ')}にも${R('登場','とうじょう')}した${R('関','せき')}あじ・${R('関','せき')}さばの${R('産地','さんち')}は？`,a:'大分県',choices:['大分県','愛媛県','福岡県','山口県'],hint:'温泉の数が日本一の県です',diff:2,pref:'大分県'},
+    {q:`${R('からくり','からくり')}${R('時計','とけい')}や${R('益子焼','ましこやき')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'栃木県',choices:['栃木県','群馬県','茨城県','埼玉県'],hint:'餃子の街としても有名です',diff:2,pref:'栃木県'},
+    {q:`${R('信楽焼','しがらきやき')}の${R('たぬきの置物','たぬきのおきもの')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'滋賀県',choices:['滋賀県','三重県','京都府','奈良県'],hint:'琵琶湖がある県です',diff:2,pref:'滋賀県'},
+    {q:`${R('さくらんぼ','さくらんぼ')}の${R('王様','おうさま')}「${R('佐藤錦','さとうにしき')}」の${R('産地','さんち')}は？`,a:'山形県',choices:['山形県','青森県','北海道','福島県'],hint:'東北地方にある県です',diff:2,pref:'山形県'},
+    {q:`${R('マンゴー','マンゴー')}の${R('生産','せいさん')}で${R('有名','ゆうめい')}な${R('九州','きゅうしゅう')}の${R('県','けん')}は？`,a:'宮崎県',choices:['宮崎県','鹿児島県','熊本県','大分県'],hint:'太陽をたっぷり浴びた果物です',diff:2,pref:'宮崎県'},
+    // ★★★ むずかしい
+    {q:`${R('小千谷縮','おぢやちぢみ')}という${R('織物','おりもの')}の${R('都道府県','とどうふけん')}は？`,a:'新潟県',choices:['新潟県','山形県','福島県','群馬県'],hint:'雪深い地域で作られる麻織物です',diff:3,pref:'新潟県'},
+    {q:`${R('備前焼','びぜんやき')}という${R('陶磁器','とうじき')}の${R('都道府県','とどうふけん')}は？`,a:'岡山県',choices:['岡山県','広島県','兵庫県','鳥取県'],hint:'桃太郎伝説で有名な県です',diff:3,pref:'岡山県'},
+    {q:`${R('熊野筆','くまのふで')}という${R('化粧筆','けしょうふで')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'広島県',choices:['広島県','山口県','岡山県','島根県'],hint:'平和記念公園がある県です',diff:3,pref:'広島県'},
+    {q:`${R('伊万里焼','いまりやき')}が${R('出荷','しゅっか')}された${R('港','みなと')}がある${R('都道府県','とどうふけん')}は？`,a:'佐賀県',choices:['佐賀県','長崎県','福岡県','熊本県'],hint:'有田焼と同じ地域で作られます',diff:3,pref:'佐賀県'},
+    {q:`${R('雄勝硯','おがつすずり')}という${R('伝統工芸品','でんとうこうげいひん')}の${R('都道府県','とどうふけん')}は？`,a:'宮城県',choices:['宮城県','岩手県','山形県','福島県'],hint:'仙台がある県です',diff:3,pref:'宮城県'},
+    // ── 追加23問（県マスター拡充：特産品） ──
+    {q:`${R('福島県','ふくしまけん')}の${R('特産品','とくさんひん')}といえば？`,a:'もも',choices:['もも','みかん','ぶどう','りんご'],hint:'夏になるとジューシーな果物がとれます',diff:1,pref:'福島県'},
+    {q:`${R('茨城県','いばらきけん')}の${R('特産品','とくさんひん')}「${R('干','ほ')}し${R('芋','いも')}」の${R('原料','げんりょう')}は？`,a:'さつまいも',choices:['さつまいも','じゃがいも','かぼちゃ','とうもろこし'],hint:'あまくてやわらかいおやつです',diff:2,pref:'茨城県'},
+    {q:`${R('こんにゃく','こんにゃく')}いもの${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'群馬県',choices:['群馬県','栃木県','長野県','山梨県'],hint:'下仁田町などで多くつくられています',diff:2,pref:'群馬県'},
+    {q:`「${R('草加','そうか')}せんべい」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'埼玉県',choices:['埼玉県','千葉県','東京都','群馬県'],hint:'草加市が発祥といわれています',diff:2,pref:'埼玉県'},
+    {q:`${R('らっかせい','らっかせい')}（ピーナッツ）の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'千葉県',choices:['千葉県','茨城県','鹿児島県','静岡県'],hint:'八街市が特産地として有名です',diff:2,pref:'千葉県'},
+    {q:`「${R('江戸切子','えどきりこ')}」という${R('伝統工芸品','でんとうこうげいひん')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'東京都',choices:['東京都','神奈川県','埼玉県','千葉県'],hint:'美しいカットが入ったガラス細工です',diff:2,pref:'東京都'},
+    {q:`${R('横浜','よこはま')}の${R('駅弁','えきべん')}として${R('有名','ゆうめい')}な「シウマイ」がある${R('都道府県','とどうふけん')}は？`,a:'神奈川県',choices:['神奈川県','東京都','埼玉県','千葉県'],hint:'横浜は有名な港町です',diff:2,pref:'神奈川県'},
+    {q:`${R('ホタルイカ','ほたるいか')}りょうで${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'富山県',choices:['富山県','石川県','新潟県','福井県'],hint:'富山湾でとれる、光るいかです',diff:2,pref:'富山県'},
+    {q:`「${R('越前','えちぜん')}がに」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'福井県',choices:['福井県','石川県','鳥取県','兵庫県'],hint:'冬の味覚として人気です',diff:2,pref:'福井県'},
+    {q:`「${R('八丁味噌','はっちょうみそ')}」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'愛知県',choices:['愛知県','岐阜県','三重県','静岡県'],hint:'名古屋めしにもよく使われます',diff:2,pref:'愛知県'},
+    {q:`${R('高級','こうきゅう')}な${R('和牛','わぎゅう')}「${R('松阪牛','まつさかぎゅう')}」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'三重県',choices:['三重県','兵庫県','滋賀県','岐阜県'],hint:'松阪市が名前の由来です',diff:2,pref:'三重県'},
+    {q:`「${R('たこ焼','たこや')}き」の${R('発祥地','はっしょうち')}として${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'大阪府',choices:['大阪府','兵庫県','京都府','奈良県'],hint:'道頓堀などで人気の食べ物です',diff:1,pref:'大阪府'},
+    {q:`${R('柿','かき')}の${R('葉','は')}でくるんだ「${R('柿','かき')}の${R('葉寿司','はずし')}」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'奈良県',choices:['奈良県','和歌山県','三重県','京都府'],hint:'保存食として生まれました',diff:3,pref:'奈良県'},
+    {q:`「${R('梅干','うめぼ')}し」の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'和歌山県',choices:['和歌山県','奈良県','三重県','愛媛県'],hint:'紀州梅として有名です',diff:2,pref:'和歌山県'},
+    {q:`「${R('二十世紀梨','にじっせいきなし')}」の${R('産地','さんち')}として${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'鳥取県',choices:['鳥取県','岡山県','島根県','広島県'],hint:'大きな砂丘がある県です',diff:2,pref:'鳥取県'},
+    {q:`「${R('出雲','いずも')}そば」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'島根県',choices:['島根県','鳥取県','岡山県','広島県'],hint:'出雲大社の近くで名物です',diff:2,pref:'島根県'},
+    {q:`「${R('萩焼','はぎやき')}」という${R('伝統的','でんとうてき')}なやきもので${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'山口県',choices:['山口県','広島県','島根県','福岡県'],hint:'萩市で作られる陶器です',diff:3,pref:'山口県'},
+    {q:`「${R('すだち','すだち')}」の${R('生産量','せいさんりょう')}が${R('日本一','にほんいち')}の${R('都道府県','とどうふけん')}は？`,a:'徳島県',choices:['徳島県','愛媛県','香川県','高知県'],hint:'さわやかな香りの柑橘です',diff:2,pref:'徳島県'},
+    {q:`「${R('かつお','かつお')}のたたき」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'高知県',choices:['高知県','徳島県','愛媛県','宮崎県'],hint:'わら焼きで香ばしく仕上げます',diff:2,pref:'高知県'},
+    {q:`${R('南蛮菓子','なんばんがし')}「${R('カステラ','かすてら')}」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'長崎県',choices:['長崎県','福岡県','佐賀県','熊本県'],hint:'江戸時代に伝わったお菓子です',diff:1,pref:'長崎県'},
+    {q:`「${R('馬刺','ばさ')}し」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'熊本県',choices:['熊本県','宮崎県','鹿児島県','大分県'],hint:'新鮮な馬肉を使った名物です',diff:2,pref:'熊本県'},
+    {q:`「${R('黒豚','くろぶた')}」で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'鹿児島県',choices:['鹿児島県','宮崎県','熊本県','沖縄県'],hint:'さつまいもを食べて育てられます',diff:2,pref:'鹿児島県'},
+    {q:`「${R('ゴーヤー','ごーやー')}チャンプルー」の${R('材料','ざいりょう')}になる${R('野菜','やさい')}で${R('有名','ゆうめい')}な${R('都道府県','とどうふけん')}は？`,a:'沖縄県',choices:['沖縄県','鹿児島県','宮崎県','高知県'],hint:'にがうりともよばれます',diff:1,pref:'沖縄県'},
+  ],
 };
 
 // =====================================================
@@ -760,6 +1057,9 @@ function init() {
   renderCategories();
   renderRankCatTabs();
   renderAllBadges();
+  renderCharacterWidgets();
+  renderPrefDex();
+  renderReportNav('screen-title');
   loadWrongBank();
 }
 
@@ -941,28 +1241,253 @@ function applyFuriganaTo(el) {
 // =====================================================
 const BADGES = [
   // 初回系
-  { id:'first',    icon:'🌱', name:'はじめの一歩',   desc:'はじめてクイズをクリア',         check:(r)=>r.total>=1 },
-  { id:'perfect',  icon:'🏆', name:'かんぺき',        desc:'ぜんもんせいかい',               check:(r)=>r.rate===100 },
-  { id:'streak3',  icon:'🔥', name:'３れんぞく',       desc:'３もんれんぞくせいかい',         check:(r)=>r.maxStreak>=3 },
-  { id:'streak5',  icon:'⚡', name:'５れんぞく',       desc:'５もんれんぞくせいかい',         check:(r)=>r.maxStreak>=5 },
-  { id:'streak10', icon:'🌟', name:'１０れんぞく',      desc:'１０もんれんぞくせいかい',       check:(r)=>r.maxStreak>=10 },
+  { id:'first',    icon:'🌱', name:'はじめの一歩',   desc:'はじめてクイズをクリア',         tier:'common', check:(r)=>r.total>=1 },
+  { id:'perfect',  icon:'🏆', name:'かんぺき',        desc:'ぜんもんせいかい',               tier:'rare',   check:(r)=>r.rate===100 },
+  { id:'streak3',  icon:'🔥', name:'３れんぞく',       desc:'３もんれんぞくせいかい',         tier:'common', check:(r)=>r.maxStreak>=3 },
+  { id:'streak5',  icon:'⚡', name:'５れんぞく',       desc:'５もんれんぞくせいかい',         tier:'rare',   check:(r)=>r.maxStreak>=5 },
+  { id:'streak10', icon:'🌟', name:'１０れんぞく',      desc:'１０もんれんぞくせいかい',       tier:'epic',   check:(r)=>r.maxStreak>=10 },
   // 問題数系
-  { id:'q50',      icon:'📚', name:'50もんクリア',     desc:'ごうけい50もんといた',           check:(_,t)=>t.totalQ>=50 },
-  { id:'q200',     icon:'📖', name:'200もんクリア',    desc:'ごうけい200もんといた',          check:(_,t)=>t.totalQ>=200 },
-  { id:'q500',     icon:'🎓', name:'500もんクリア',    desc:'ごうけい500もんといた',          check:(_,t)=>t.totalQ>=500 },
+  { id:'q50',      icon:'📚', name:'50もんクリア',     desc:'ごうけい50もんといた',           tier:'common', check:(_,t)=>t.totalQ>=50 },
+  { id:'q200',     icon:'📖', name:'200もんクリア',    desc:'ごうけい200もんといた',          tier:'rare',   check:(_,t)=>t.totalQ>=200 },
+  { id:'q500',     icon:'🎓', name:'500もんクリア',    desc:'ごうけい500もんといた',          tier:'epic',   check:(_,t)=>t.totalQ>=500 },
   // 正解率系
-  { id:'rate80',   icon:'😊', name:'優秀賞',           desc:'せいかいりつ80%以上',            check:(r)=>r.rate>=80 },
-  { id:'rate100x3',icon:'👑', name:'パーフェクト３回',  desc:'ぜんもんせいかいを３回達成',     check:(_,t)=>t.perfectCount>=3 },
+  { id:'rate80',   icon:'😊', name:'優秀賞',           desc:'せいかいりつ80%以上',            tier:'common', check:(r)=>r.rate>=80 },
+  { id:'rate100x3',icon:'👑', name:'パーフェクト３回',  desc:'ぜんもんせいかいを３回達成',     tier:'epic',   check:(_,t)=>t.perfectCount>=3 },
   // カテゴリ制覇系
-  { id:'allcat',   icon:'🗺️', name:'ちりはかせ',       desc:'ぜんカテゴリでクリア',           check:(_,t)=>Object.keys(t.catDone||{}).length>=6 },
-  { id:'capital47',icon:'🏙️', name:'県庁所在地マスター',desc:'県庁所在地47問すべてを正解',    check:(_,t)=>(t.capitalCorrect||0)>=47 },
+  { id:'allcat',   icon:'🗺️', name:'ちりはかせ',       desc:'ぜんカテゴリでクリア',           tier:'rare',   check:(_,t)=>Object.keys(t.catDone||{}).length>=CATEGORIES.length },
+  { id:'capital47',icon:'🏙️', name:'県庁所在地マスター',desc:'県庁所在地47問すべてを正解',    tier:'epic',   check:(_,t)=>(t.capitalCorrect||0)>=47 },
   // スコア系
-  { id:'score100', icon:'💯', name:'100点獲得',        desc:'１回で100点（全問正解）',        check:(r)=>r.rate===100&&r.total>=10 },
-  { id:'total30',  icon:'🎯', name:'30もん完走',        desc:'30もんコースをクリア',           check:(r)=>r.total>=30 },
+  { id:'score100', icon:'💯', name:'100点獲得',        desc:'１回で100点（全問正解）',        tier:'rare',   check:(r)=>r.rate===100&&r.total>=10 },
+  { id:'total30',  icon:'🎯', name:'30もん完走',        desc:'30もんコースをクリア',           tier:'common', check:(r)=>r.total>=30 },
   // 難易度系
-  { id:'hard5',    icon:'🦁', name:'チャレンジャー',    desc:'★★★を５問以上正解',            check:(r)=>r.hardCorrect>=5 },
-  { id:'hard20',   icon:'🧠', name:'ちりの天才',        desc:'★★★を20問以上（累計）正解',    check:(_,t)=>(t.hardCorrect||0)>=20 },
+  { id:'hard5',    icon:'🦁', name:'チャレンジャー',    desc:'★★★を５問以上正解',            tier:'rare',   check:(r)=>r.hardCorrect>=5 },
+  { id:'hard20',   icon:'🧠', name:'ちりの天才',        desc:'★★★を20問以上（累計）正解',    tier:'epic',   check:(_,t)=>(t.hardCorrect||0)>=20 },
+  // 県マスター系
+  { id:'prefmaster47',icon:'🗾',name:'都道府県マスター', desc:'47都道府県すべての問題をせいふく', tier:'epic', check:(_,t)=>(t.masteredPrefCount||0)>=47 },
 ];
+const TIER_LABEL = { common:'ノーマル', rare:'レア', epic:'エピック' };
+const TIER_ICON  = { common:'🥉', rare:'🥈', epic:'🥇' };
+
+// =====================================================
+// キャラクター育成（たびギツネ）
+// =====================================================
+const XP_PER_LEVEL = 100; // 1レベルに必要なXP
+const CHAR_STAGES = [
+  { minLv:1,  maxLv:1,   icon:'🥚', name:'たまごちゃん'       },
+  { minLv:2,  maxLv:3,   icon:'🐣', name:'ひよこ旅人'         },
+  { minLv:4,  maxLv:6,   icon:'🦊', name:'きつね見習い'       },
+  { minLv:7,  maxLv:10,  icon:'🦉', name:'ちり博士のたまご'   },
+  { minLv:11, maxLv:15,  icon:'🐉', name:'ちりドラゴン'       },
+  { minLv:16, maxLv:9999,icon:'👑', name:'でんせつのちり神'   },
+];
+function getCharStage(level) {
+  return CHAR_STAGES.find(s => level>=s.minLv && level<=s.maxLv) || CHAR_STAGES[CHAR_STAGES.length-1];
+}
+function levelFromXP(totalXP) {
+  return Math.floor(totalXP / XP_PER_LEVEL) + 1;
+}
+// このクイズ結果でもらえるXPを計算
+function calcXpGain(resultData, isReview) {
+  if (isReview) return Math.round(resultData.score * 4); // 復習モードは控えめなXP
+  let xp = resultData.score * 10;
+  xp += (resultData.diffBonus || 0);
+  if (resultData.maxStreak >= 3) xp += resultData.maxStreak * 2;
+  if (resultData.rate === 100 && resultData.total >= 5) xp += 30;
+  return Math.round(xp);
+}
+// キャラクター表示を1箇所分更新（suffix: 'title' | 'progress'）
+function paintCharacter(suffix, totalXP) {
+  const level = levelFromXP(totalXP);
+  const stage = getCharStage(level);
+  const inLevelXp = totalXP % XP_PER_LEVEL;
+  const pct = Math.round((inLevelXp / XP_PER_LEVEL) * 100);
+  const av = document.getElementById(`char-avatar-${suffix}`);
+  const lv = document.getElementById(`char-lv-${suffix}`);
+  const nm = document.getElementById(`char-name-${suffix}`);
+  const fill = document.getElementById(`char-xp-fill-${suffix}`);
+  const label = document.getElementById(`char-xp-label-${suffix}`);
+  if (!av) return;
+  av.textContent = stage.icon;
+  lv.textContent = `Lv.${level}`;
+  nm.textContent = stage.name;
+  fill.style.width = pct + '%';
+  label.textContent = `${inLevelXp} / ${XP_PER_LEVEL} XP`;
+}
+function renderCharacterWidgets() {
+  const rec = loadRecords();
+  const totalXP = (rec.stats && rec.stats.charXP) || 0;
+  paintCharacter('title', totalXP);
+  paintCharacter('progress', totalXP);
+}
+function showLevelUp(fromLevel, toLevel) {
+  const stage = getCharStage(toLevel);
+  const fromStage = getCharStage(fromLevel);
+  document.getElementById('levelup-avatar').textContent = stage.icon;
+  document.getElementById('levelup-lv').textContent = `Lv.${toLevel}`;
+  document.getElementById('levelup-name').textContent = stage.name;
+  const newstageEl = document.getElementById('levelup-newstage');
+  newstageEl.style.display = (stage.name !== fromStage.name) ? 'inline-block' : 'none';
+  document.getElementById('levelup-overlay').classList.add('show');
+  playSound('perfect');
+  spawnParticles();
+}
+function closeLevelUp() {
+  document.getElementById('levelup-overlay').classList.remove('show');
+}
+
+// =====================================================
+// 都道府県図鑑（県マスター判定）
+// =====================================================
+const PREF_LIST = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+  "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+  "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県",
+  "滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県",
+  "鳥取県","島根県","岡山県","広島県","山口県",
+  "徳島県","香川県","愛媛県","高知県",
+  "福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"];
+// 各県ごとに「これに正解すればマスター」の問題キー一覧を作る（pref/capital/specialtyの3カテゴリ）
+const PREF_QUESTION_KEYS = {};
+['pref','capital','specialty'].forEach(cat=>{
+  (QUESTIONS[cat]||[]).forEach(q=>{
+    if(q.pref){
+      if(!PREF_QUESTION_KEYS[q.pref]) PREF_QUESTION_KEYS[q.pref] = [];
+      if(!PREF_QUESTION_KEYS[q.pref].includes(q.q)) PREF_QUESTION_KEYS[q.pref].push(q.q);
+    }
+  });
+});
+function computePrefMastery(rec) {
+  const masteredKeys = (rec.stats && rec.stats.masteredKeys) || {};
+  const perPref = {};
+  let masteredCount = 0;
+  PREF_LIST.forEach(p=>{
+    const keys = PREF_QUESTION_KEYS[p] || [];
+    const total = keys.length;
+    const done = keys.filter(k=>masteredKeys[k]).length;
+    const mastered = total>0 && done>=total;
+    if(mastered) masteredCount++;
+    perPref[p] = {done,total,mastered};
+  });
+  return {perPref, masteredCount};
+}
+function renderPrefDex() {
+  const rec = loadRecords();
+  const {perPref, masteredCount} = computePrefMastery(rec);
+  const summaryEl = document.getElementById('prefdex-summary');
+  const barEl = document.getElementById('prefdex-bar-fill');
+  if(summaryEl) summaryEl.textContent = `${masteredCount} / 47 けんをマスター`;
+  if(barEl) barEl.style.width = Math.round(masteredCount/47*100) + '%';
+  const grid = document.getElementById('prefdex-grid');
+  if(grid){
+    grid.innerHTML = PREF_LIST.map(p=>{
+      const info = perPref[p] || {done:0,total:0,mastered:false};
+      const short = p.replace(/[都道府県]$/,'');
+      return `<div class="prefdex-item${info.mastered?' done':''}" title="${p}：${info.done}/${info.total}問正解">
+        <span class="pd-icon">${info.mastered?'🏯':'🔒'}</span>
+        ${short}
+        <span class="pd-frac">${info.done}/${info.total}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+
+// =====================================================
+// 保護者レポート
+// =====================================================
+function computeWeakCategory(rec) {
+  const stats = (rec.stats && rec.stats.catStats) || {};
+  let weakest = null;
+  CATEGORIES.forEach(cat=>{
+    const s = stats[cat.id];
+    if(!s || s.total < 5) return;
+    const pct = Math.round((s.correct / s.total) * 100);
+    if(!weakest || pct < weakest.pct){
+      weakest = { id:cat.id, name:cat.name, icon:cat.icon, pct, total:s.total };
+    }
+  });
+  return weakest;
+}
+function studyDaysCount(rec) {
+  const dates = new Set((rec.sessionLog||[]).map(s=>s.date));
+  return dates.size;
+}
+function startQuizForCategory(catId) {
+  selectedCats = [catId];
+  quizCount = 10;
+  startQuiz();
+}
+function renderParentReport() {
+  const rec = loadRecords();
+  const stats = rec.stats || {};
+  const totalQ = stats.totalQ || 0;
+  const catStats = stats.catStats || {};
+  let sumCorrect=0, sumTotal=0;
+  Object.values(catStats).forEach(v=>{ sumCorrect+=v.correct; sumTotal+=v.total; });
+  const overallPct = sumTotal>0 ? Math.round(sumCorrect/sumTotal*100) : 0;
+  const days = studyDaysCount(rec);
+  const sessions = (rec.sessionLog||[]).length;
+  const badgeC = (rec.earnedBadges||[]).length;
+  const level = levelFromXP(stats.charXP||0);
+
+  document.getElementById('parent-stat-grid').innerHTML = `
+    <div class="stat-card"><div class="sc-val">${days}</div><div class="sc-key">🗓 学習した日数</div></div>
+    <div class="stat-card"><div class="sc-val">${sessions}</div><div class="sc-key">📝 いままでの回数</div></div>
+    <div class="stat-card"><div class="sc-val">${totalQ}</div><div class="sc-key">📚 といた問題数</div></div>
+    <div class="stat-card"><div class="sc-val">${overallPct}%</div><div class="sc-key">🎯 全体の正答率</div></div>
+    <div class="stat-card"><div class="sc-val">Lv.${level}</div><div class="sc-key">🦊 キャラクターレベル</div></div>
+    <div class="stat-card"><div class="sc-val">${badgeC}<span style="font-size:14px;color:var(--gray)">/${BADGES.length}</span></div><div class="sc-key">🎖 かくとくバッジ</div></div>
+  `;
+
+  // カテゴリ別 累計正答率（グラフ）
+  const catEl = document.getElementById('parent-cat-list');
+  catEl.innerHTML = CATEGORIES.map(cat=>{
+    const s = catStats[cat.id];
+    const total = s ? s.total : 0;
+    const pct = s && s.total>0 ? Math.round(s.correct/s.total*100) : 0;
+    const color = total===0 ? '#d9e6ea' : (pct>=80?'#2D9B4E':pct>=50?'#FFB703':'#DC2626');
+    return `
+      <div class="cat-progress-item">
+        <div class="cat-progress-label">
+          <span>${cat.icon} ${cat.name}</span>
+          <span class="cat-progress-rate">${total>0 ? `${pct}%（${s.correct}/${s.total}問）` : 'まだ挑戦していません'}</span>
+        </div>
+        <div class="cat-bar-bg">
+          <div class="cat-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // 苦手カテゴリの自動おすすめ
+  const weak = computeWeakCategory(rec);
+  const weakEl = document.getElementById('parent-weak-box');
+  if(weak){
+    weakEl.innerHTML = `
+      <div class="weak-box-title">🎯 いま特にがんばりたいカテゴリ</div>
+      <div class="weak-box-cat">${weak.icon} ${weak.name}　正答率 ${weak.pct}%（累計${weak.total}問）</div>
+      <button class="weak-box-btn" onclick="startQuizForCategory('${weak.id}')">このカテゴリで特訓する →</button>
+    `;
+  } else {
+    weakEl.innerHTML = `
+      <div class="weak-box-title">🎯 いま特にがんばりたいカテゴリ</div>
+      <div style="font-size:12px;color:var(--gray);margin-top:4px;">各カテゴリを5問以上プレイすると、苦手分野をおしえてくれます。</div>`;
+  }
+
+  // 直近の学習トレンド
+  const trendEl = document.getElementById('parent-trend');
+  const recent = (rec.sessionLog||[]).slice(-10);
+  if(recent.length===0){
+    trendEl.innerHTML = `<div style="font-size:12px;color:var(--gray);text-align:center;width:100%;">まだ記録がありません</div>`;
+  } else {
+    trendEl.innerHTML = recent.map(s=>{
+      const color = s.rate>=80?'#2D9B4E':s.rate>=50?'#FFB703':'#DC2626';
+      return `<div class="trend-bar-wrap" title="${s.date}：${s.rate}%（${s.total}問）">
+        <div class="trend-bar" style="height:${Math.max(s.rate,6)}%;background:${color}"></div>
+        <div class="trend-bar-label">${s.rate}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
 
 // =====================================================
 // ランキング・実績ストレージ
@@ -978,27 +1503,60 @@ function clearRecords() {
   localStorage.removeItem(STOR_KEY);
   renderRankList(rankCurrentCat);
   renderAllBadges();
+  renderCharacterWidgets();
+  renderPrefDex();
   alert('きろくをリセットしました！');
 }
 
 // カテゴリ名ラベル
 const CAT_LABELS = {
   pref:'都道府県', capital:'県庁所在地', region:'地方区分',
-  mountain:'山', river:'川', island:'島・半島', mixed:'ミックス'
+  mountain:'山', river:'川', island:'島・半島', specialty:'特産品', mixed:'ミックス'
 };
 
 // =====================================================
 // 結果を保存 & バッジ判定
 // =====================================================
-function saveResult(resultData) {
+function saveResult(resultData, isReview) {
   const rec = loadRecords();
   // totalStats
-  if(!rec.stats) rec.stats = {totalQ:0, perfectCount:0, hardCorrect:0, catDone:{}, capitalCorrect:0};
+  if(!rec.stats) rec.stats = {totalQ:0, perfectCount:0, hardCorrect:0, catDone:{}, capitalCorrect:0, charXP:0};
   rec.stats.totalQ += resultData.total;
   if(resultData.rate===100) rec.stats.perfectCount++;
   rec.stats.hardCorrect = (rec.stats.hardCorrect||0) + (resultData.hardCorrect||0);
   rec.stats.capitalCorrect = (rec.stats.capitalCorrect||0) + (resultData.capitalCorrect||0);
   selectedCats.forEach(id => { rec.stats.catDone[id] = true; });
+
+  // 都道府県マスター（この回で正解した県タグ付き問題を記録）
+  if(!rec.stats.masteredKeys) rec.stats.masteredKeys = {};
+  (resultData.masteredKeys||[]).forEach(k => { rec.stats.masteredKeys[k] = true; });
+  rec.stats.masteredPrefCount = computePrefMastery(rec).masteredCount;
+
+  // カテゴリ別 累計正解／累計問題数（苦手カテゴリ判定・保護者レポート用）
+  if(!rec.stats.catStats) rec.stats.catStats = {};
+  Object.entries(resultData.catBreakdown || {}).forEach(([cid,v])=>{
+    if(!rec.stats.catStats[cid]) rec.stats.catStats[cid] = {correct:0,total:0};
+    rec.stats.catStats[cid].correct += v.correct;
+    rec.stats.catStats[cid].total   += v.total;
+  });
+
+  // 学習ログ（保護者レポートの推移表示用、直近30回まで保持）
+  if(!rec.sessionLog) rec.sessionLog = [];
+  if(!isReview){
+    rec.sessionLog.push({
+      ts: Date.now(),
+      date: new Date().toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}),
+      rate: resultData.rate,
+      total: resultData.total,
+    });
+    if(rec.sessionLog.length>30) rec.sessionLog = rec.sessionLog.slice(-30);
+  }
+
+  // キャラクターXP
+  const levelBefore = levelFromXP(rec.stats.charXP || 0);
+  const xpGained = calcXpGain(resultData, isReview);
+  rec.stats.charXP = (rec.stats.charXP || 0) + xpGained;
+  const levelAfter = levelFromXP(rec.stats.charXP);
 
   // ランキング（カテゴリ別）
   const catKey = selectedCats.length===1 ? selectedCats[0] : 'mixed';
@@ -1025,7 +1583,7 @@ function saveResult(resultData) {
   });
   rec.earnedBadges = earned;
   saveRecords(rec);
-  return newBadges;
+  return { newBadges, xpGained, levelBefore, levelAfter };
 }
 
 // =====================================================
@@ -1036,7 +1594,7 @@ function renderRankCatTabs() {
   const tabs = document.getElementById('rank-cat-tabs');
   if(!tabs) return;
   tabs.innerHTML = '';
-  ['pref','capital','region','mountain','river','island','mixed'].forEach(id=>{
+  ['pref','capital','region','mountain','river','island','specialty','mixed'].forEach(id=>{
     const btn = document.createElement('button');
     btn.className = 'rank-cat-btn' + (id===rankCurrentCat?' active':'');
     btn.textContent = CAT_LABELS[id];
@@ -1069,7 +1627,8 @@ function renderAllBadges() {
   if(!el) return;
   el.innerHTML = BADGES.map(b=>{
     const got = earned.includes(b.id);
-    return `<div class="badge-item${got?'':' locked'}" title="${b.desc}">
+    return `<div class="badge-item tier-${b.tier}${got?'':' locked'}" title="${TIER_LABEL[b.tier]}／${b.desc}">
+      <span class="badge-tier-tag ${b.tier}">${TIER_ICON[b.tier]}</span>
       <div class="badge-icon">${b.icon}</div>
       <div class="badge-name">${b.name}</div>
     </div>`;
@@ -1080,8 +1639,9 @@ function renderNewBadges(newBadges) {
   const el = document.getElementById('new-badges');
   if(!newBadges.length){ el.innerHTML='<div style="font-size:12px;color:var(--gray)">（まだかくとくしていません）</div>'; return; }
   el.innerHTML = newBadges.map(b=>
-    `<div class="badge-item new-glow">
+    `<div class="badge-item tier-${b.tier} new-glow">
       <div class="badge-new">NEW!</div>
+      <span class="badge-tier-tag ${b.tier}">${TIER_ICON[b.tier]}</span>
       <div class="badge-icon">${b.icon}</div>
       <div class="badge-name">${b.name}</div>
     </div>`
@@ -1095,12 +1655,21 @@ function showResult() {
   clearInterval(timerInterval);
   const total=quizQuestions.length, rate=Math.round(score/total*100);
   // 難易度★★★正解数、county正解数を集計
-  let hardCorrect=0, capitalCorrect=0;
+  let hardCorrect=0, capitalCorrect=0, diffBonus=0;
+  const masteredKeys=[];
+  const catBreakdown={};
   history.forEach((h,i)=>{
     const q=quizQuestions[i];
+    if(q&&q.cat){
+      if(!catBreakdown[q.cat]) catBreakdown[q.cat]={correct:0,total:0};
+      catBreakdown[q.cat].total++;
+      if(h.ok) catBreakdown[q.cat].correct++;
+    }
     if(h.ok){
-      if(q&&q.diff===3) hardCorrect++;
+      if(q&&q.diff===3){ hardCorrect++; diffBonus+=6; }
+      else if(q&&q.diff===2){ diffBonus+=3; }
       if(q&&q.cat==='capital') capitalCorrect++;
+      if(q&&q.pref) masteredKeys.push(q.q);
     }
   });
   document.getElementById('result-score').textContent=`${score} / ${total}`;
@@ -1129,11 +1698,24 @@ function showResult() {
       <div class="rv-a">こたえ：${h.correct}${!h.ok&&h.chosen?`　あなた：${h.chosen}`:!h.ok?'　（じかんぎれ）':''}</div>`;
     list.appendChild(div);
   });
-  // 実績保存・バッジ判定
+  // 実績保存・バッジ判定・キャラクターXP
   if(rate===100) playSound('perfect');
-  const newBadges = saveResult({score,total,rate,maxStreak,hardCorrect,capitalCorrect});
+  const { newBadges, xpGained, levelBefore, levelAfter } =
+    saveResult({score,total,rate,maxStreak,hardCorrect,capitalCorrect,diffBonus,masteredKeys,catBreakdown}, isReviewMode);
   renderNewBadges(newBadges);
   renderRankCatTabs();
+  renderCharacterWidgets();
+  renderPrefDex();
+  // XP獲得表示
+  const stageNow = getCharStage(levelAfter);
+  document.getElementById('xp-gain-box').style.display = 'flex';
+  document.getElementById('xp-gain-avatar').textContent = stageNow.icon;
+  document.getElementById('xp-gain-text').textContent = `${stageNow.name}がけいけんちをかくとく！`;
+  document.getElementById('xp-gain-amount').textContent = `+${xpGained} XP`;
+  // レベルアップ演出（結果画面を表示した少し後に出す）
+  if (levelAfter > levelBefore) {
+    setTimeout(() => showLevelUp(levelBefore, levelAfter), 550);
+  }
   // 復習ボタン：間違いがあれば有効
   const wrongCount = history.filter(h=>!h.ok).length;
   const rb = document.getElementById('review-btn');
@@ -1223,7 +1805,7 @@ function launchReviewMode(qs) {
 // =====================================================
 const CAT_COLORS = {
   pref:'#E63946', capital:'#457B9D', region:'#2D9B4E',
-  mountain:'#8B4513', river:'#0077B6', island:'#9B2D9B'
+  mountain:'#8B4513', river:'#0077B6', island:'#9B2D9B', specialty:'#FF8FA3'
 };
 
 function renderProgressScreen() {
@@ -1292,11 +1874,21 @@ function loadRecordsForProgress() {
 // showScreen に進捗更新を追加
 const _origShowScreen = showScreen;
 // 既存showScreenをオーバーライド
+function renderReportNav(activeId) {
+  const html = REPORT_NAV_ITEMS.map(it => `
+    <button class="report-nav-btn${it.id===activeId?' active':''}" onclick="showScreen('${it.id}')">
+      <span class="rn-icon">${it.icon}</span>${it.label}
+    </button>`).join('');
+  document.querySelectorAll('.report-nav').forEach(el => el.innerHTML = html);
+}
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  renderReportNav(id);
   if (id === 'screen-progress') renderProgressScreen();
   if (id === 'screen-rank')     renderRankCatTabs();
+  if (id === 'screen-prefdex')  renderPrefDex();
+  if (id === 'screen-parent')   renderParentReport();
 }
 
 // =====================================================

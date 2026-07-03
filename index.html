@@ -298,6 +298,44 @@
     font-family:inherit; font-size:14px; font-weight:900; border:none; border-radius:12px; cursor:pointer;
   }
 
+  /* ===== プロフィール切り替え ===== */
+  .profile-header-pill {
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    background:var(--light); border:none; border-radius:20px; padding:6px 14px;
+    margin:0 auto 14px; width:fit-content; cursor:pointer; font-family:inherit;
+  }
+  .profile-header-pill .ph-avatar { font-size:16px; }
+  .profile-header-pill .ph-name { font-size:12px; font-weight:700; color:var(--navy); }
+  .profile-header-pill .ph-arrow { font-size:10px; color:var(--gray); }
+  .profile-back-row { margin-bottom:10px; }
+  .profile-back-btn { background:none; border:none; font-size:22px; cursor:pointer; color:var(--navy); padding:0; }
+  .profile-intro { text-align:center; margin-bottom:16px; }
+  .profile-intro-emoji { font-size:42px; }
+  .profile-intro-title { font-size:19px; font-weight:900; color:var(--navy); margin:6px 0 4px; }
+  .profile-intro-hint { font-size:11.5px; color:var(--gray); line-height:1.6; }
+  .profile-list { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+  .profile-list-empty { padding:14px; color:var(--gray); font-size:12px; text-align:center; }
+  .profile-card {
+    background:var(--light); border:2px solid transparent; border-radius:14px; padding:12px 14px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer;
+    width:100%; font-family:inherit; text-align:left; transition:border-color .15s;
+  }
+  .profile-card.active-profile { border-color:var(--correct); background:#EAFAF0; }
+  .pc-name { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700; color:var(--navy); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+  .pc-avatar { width:36px; height:36px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
+  .pc-active-tag { color:var(--correct); font-size:11px; font-weight:700; flex-shrink:0; }
+  .pc-actions { display:flex; gap:6px; flex-shrink:0; }
+  .pc-action-btn { color:var(--gray); font-size:11px; padding:5px 9px; border-radius:20px; background:#fff; white-space:nowrap; }
+  .pc-action-btn.danger:active { color:#fff; background:var(--wrong); }
+  .profile-create-row { display:flex; gap:8px; margin-bottom:22px; }
+  .profile-create-input { flex:1; padding:12px; border-radius:12px; border:1.5px solid #BFC8E0; font-family:inherit; font-size:14px; min-width:0; }
+  .profile-create-btn { background:var(--correct); color:#fff; border:none; border-radius:12px; padding:0 18px; font-weight:700; font-size:14px; cursor:pointer; font-family:inherit; }
+  .profile-export-section { border-top:1.5px solid var(--light); padding-top:14px; }
+  .profile-export-title { font-size:13px; font-weight:700; color:var(--navy); margin-bottom:6px; }
+  .profile-export-desc { font-size:11px; color:var(--gray); margin-bottom:10px; line-height:1.6; }
+  .profile-export-row { display:flex; gap:8px; }
+  .profile-export-btn { flex:1; background:var(--light); color:var(--navy); border:1.5px solid #BFC8E0; border-radius:12px; padding:10px; font-weight:700; font-size:12px; cursor:pointer; font-family:inherit; }
+
   /* ===== RANKING ===== */
   .rank-cat-btn {
     padding:5px 12px; border:2px solid var(--light); border-radius:99px;
@@ -661,9 +699,42 @@
 <!-- ===== PARTICLE CANVAS ===== -->
 <canvas id="particle-canvas"></canvas>
 
+<!-- ===== プロフィール切り替え ===== -->
+<div id="screen-profile" class="screen">
+  <div class="card">
+    <div class="profile-back-row" id="profile-back-row" style="display:none;">
+      <button class="profile-back-btn" onclick="closeProfileScreen()">←</button>
+    </div>
+    <div class="profile-intro">
+      <div class="profile-intro-emoji">👤</div>
+      <h1 class="profile-intro-title" id="profile-screen-title">だれが使う？</h1>
+      <p class="profile-intro-hint" id="profile-screen-hint">端末を共有していても、きろく・バッジ・都道府県マスターを人ごとに分けて記録できます</p>
+    </div>
+    <div class="profile-list" id="profile-list"></div>
+    <div class="profile-create-row">
+      <input type="text" id="new-profile-name" class="profile-create-input" placeholder="なまえ（10文字まで）" maxlength="10">
+      <button class="profile-create-btn" onclick="handleCreateProfileClick()">作成</button>
+    </div>
+    <div class="profile-export-section">
+      <p class="profile-export-title">📦 データの引きつぎ</p>
+      <p class="profile-export-desc">いま選んでいるプロフィールのきろく・バッジ・都道府県マスターを、ファイルに書き出して別の端末に引きつぐことができます。</p>
+      <div class="profile-export-row">
+        <button class="profile-export-btn" onclick="exportProfileData()">⬇️ 書き出す</button>
+        <button class="profile-export-btn" onclick="document.getElementById('import-file-input').click()">⬆️ 読みこむ</button>
+      </div>
+      <input type="file" id="import-file-input" accept="application/json" style="display:none;" onchange="if(this.files[0]) importProfileData(this.files[0]); this.value='';">
+    </div>
+  </div>
+</div>
+
 <!-- ===== TITLE ===== -->
 <div id="screen-title" class="screen active">
   <div class="card">
+    <button class="profile-header-pill" onclick="goProfileScreen(false)">
+      <span class="ph-avatar" id="profile-header-avatar">👤</span>
+      <span class="ph-name" id="profile-header-name">プロフィール</span>
+      <span class="ph-arrow">きりかえる ›</span>
+    </button>
     <div class="app-header">
       <span class="flag">🗾</span>
       <div class="app-title">にほんちり クイズ</div>
@@ -1659,7 +1730,8 @@ let currentSelectedMode = 'all'; // 'all' | 'category' | 'prefmaster'
 // =====================================================
 // 初期化
 // =====================================================
-function init() {
+function enterAppForActiveProfile() {
+  updateProfileLabel();
   renderCategories();
   renderRankCatTabs();
   renderAllBadges();
@@ -1669,6 +1741,14 @@ function init() {
   loadWrongBank();
   renderTitleSummary();
   renderDailyQuestion();
+}
+
+// アプリ起動時：プロフィールが決まっていればそのまま、決まっていなければ
+// プロフィール選択（または初回作成）画面を表示してから enterAppForActiveProfile() を呼ぶ
+function init() {
+  if (initProfileSystem()) {
+    enterAppForActiveProfile();
+  }
 }
 
 function selectCount(n, btn) {
@@ -2114,9 +2194,9 @@ function getDailyQuestion() {
   return all[idx];
 }
 function loadDailyRecord() {
-  try { return JSON.parse(localStorage.getItem(DAILY_KEY)) || {}; } catch { return {}; }
+  try { return JSON.parse(localStorage.getItem(profileKey(DAILY_KEY))) || {}; } catch { return {}; }
 }
-function saveDailyRecord(r) { localStorage.setItem(DAILY_KEY, JSON.stringify(r)); }
+function saveDailyRecord(r) { localStorage.setItem(profileKey(DAILY_KEY), JSON.stringify(r)); }
 
 function renderDailyQuestion() {
   const qTextEl = document.getElementById('daily-q-text');
@@ -2300,15 +2380,15 @@ function renderParentReport() {
 // =====================================================
 const STOR_KEY = 'jgeo_records_v2';
 function loadRecords() {
-  try { return JSON.parse(localStorage.getItem(STOR_KEY)) || {}; } catch{ return {}; }
+  try { return JSON.parse(localStorage.getItem(profileKey(STOR_KEY))) || {}; } catch{ return {}; }
 }
 function saveRecords(rec) {
-  localStorage.setItem(STOR_KEY, JSON.stringify(rec));
+  localStorage.setItem(profileKey(STOR_KEY), JSON.stringify(rec));
 }
 function clearRecords() {
-  localStorage.removeItem(STOR_KEY);
-  localStorage.removeItem(BADGE_SEEN_KEY);
-  localStorage.removeItem(DAILY_KEY);
+  localStorage.removeItem(profileKey(STOR_KEY));
+  localStorage.removeItem(profileKey(BADGE_SEEN_KEY));
+  localStorage.removeItem(profileKey(DAILY_KEY));
   badgeCurrentTab = 'all';
   renderRankList(rankCurrentCat);
   renderAllBadges();
@@ -2443,7 +2523,7 @@ function renderRankList(catKey) {
 let badgeCurrentTab = 'all';
 const BADGE_SEEN_KEY = 'jgeo_badges_seen_v1';
 function loadSeenBadges() {
-  try { return new Set(JSON.parse(localStorage.getItem(BADGE_SEEN_KEY)) || []); }
+  try { return new Set(JSON.parse(localStorage.getItem(profileKey(BADGE_SEEN_KEY))) || []); }
   catch { return new Set(); }
 }
 function markBadgeSeen(id) {
@@ -2451,7 +2531,7 @@ function markBadgeSeen(id) {
     const s = loadSeenBadges();
     if (s.has(id)) return;
     s.add(id);
-    localStorage.setItem(BADGE_SEEN_KEY, JSON.stringify([...s]));
+    localStorage.setItem(profileKey(BADGE_SEEN_KEY), JSON.stringify([...s]));
   } catch {}
 }
 function setBadgeTab(tab) {
@@ -2672,7 +2752,181 @@ function shuffle(arr){
   return arr;
 }
 
-init();
+// =====================================================
+// プロフィール管理（同一端末で複数人利用）
+// =====================================================
+const PROFILES_KEY = 'jgeo_profiles_v1', ACTIVE_PROFILE_KEY = 'jgeo_active_profile_v1';
+let activeProfileId = null;
+function lsGetRaw(key, def) { try { const v = JSON.parse(localStorage.getItem(key)); return (v===null||v===undefined) ? def : v; } catch(e) { return def; } }
+function lsSetRaw(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+// すべてのゲームデータ用キーはこのヘルパーを通して「::プロフィールID」を付与し、プロフィールごとに分離保存する
+function profileKey(base) { return `${base}::${activeProfileId || 'default'}`; }
+function loadProfiles() { return lsGetRaw(PROFILES_KEY, []); }
+function saveProfiles(p) { lsSetRaw(PROFILES_KEY, p); }
+function getActiveProfileId() { return lsGetRaw(ACTIVE_PROFILE_KEY, null); }
+function setActiveProfileId(id) { lsSetRaw(ACTIVE_PROFILE_KEY, id); activeProfileId = id; }
+const PROFILE_AVATARS = ['🦊','🐰','🐻','🐼','🦁','🐯','🐶','🐱','🦄','🐨','🐸','🐧'];
+function avatarForName(name) { let h=0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0; return PROFILE_AVATARS[h % PROFILE_AVATARS.length]; }
+function createProfile(name) {
+  name = (name||'').trim().slice(0,10);
+  if (!name) { alert('なまえを入力してください。'); return null; }
+  const profiles = loadProfiles();
+  if (profiles.some(p=>p.name===name)) { alert('同じ名前のプロフィールがすでにあります。'); return null; }
+  const id = 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  profiles.push({ id, name, createdAt:new Date().toISOString() });
+  saveProfiles(profiles);
+  return id;
+}
+// ===== 旧データ（プロフィール導入前）の引き継ぎ =====
+// プロフィール機能を追加する前は「プロフィールIDなし」のキー名で保存されていたため、
+// 初めてプロフィールを作る時だけ、そのデータを新しいプロフィールに自動コピーする
+// （関数内で遅延評価：WRONG_KEY 等の定義はこの位置より後にあるため、即時配列にはできない）
+function getLegacyKeys() { return [STOR_KEY, WRONG_KEY, DAILY_KEY, BADGE_SEEN_KEY]; }
+function hasLegacyData() { return getLegacyKeys().some(k=>localStorage.getItem(k)!==null); }
+function migrateLegacyDataToProfile(profileId) {
+  getLegacyKeys().forEach(k=>{
+    const v = localStorage.getItem(k);
+    if (v!==null) {
+      localStorage.setItem(`${k}::${profileId}`, v);
+      localStorage.removeItem(k);
+    }
+  });
+}
+function renameProfileById(id) {
+  const profiles = loadProfiles();
+  const p = profiles.find(x=>x.id===id);
+  if (!p) return;
+  const input = prompt('あたらしいなまえを入力してください（10文字まで）', p.name);
+  if (input===null) return; // キャンセル
+  const newName = input.trim().slice(0,10);
+  if (!newName) { alert('なまえを入力してください。'); return; }
+  if (profiles.some(x=>x.id!==id && x.name===newName)) { alert('同じ名前のプロフィールがすでにあります。'); return; }
+  p.name = newName;
+  saveProfiles(profiles);
+  renderProfileList();
+  if (id===activeProfileId) updateProfileLabel();
+}
+function deleteProfileById(id) {
+  let profiles = loadProfiles();
+  const p = profiles.find(x=>x.id===id);
+  if (!p) return;
+  if (!confirm(`「${p.name}」のデータを削除します。きろく・バッジ・都道府県マスターもすべて消えます。よろしいですか？`)) return;
+  const suffix = '::'+id;
+  Object.keys(localStorage).filter(k=>k.endsWith(suffix)).forEach(k=>localStorage.removeItem(k));
+  profiles = profiles.filter(x=>x.id!==id);
+  saveProfiles(profiles);
+  if (activeProfileId===id) { setActiveProfileId(null); }
+  if (activeProfileId===null) { goProfileScreen(true); } else { renderProfileList(); }
+}
+function selectProfile(id) {
+  setActiveProfileId(id);
+  showScreen('screen-title');
+  enterAppForActiveProfile();
+}
+function handleCreateProfileClick() {
+  const input = document.getElementById('new-profile-name');
+  const id = createProfile(input.value);
+  if (!id) return;
+  input.value = '';
+  selectProfile(id);
+}
+function renderProfileList() {
+  const profiles = loadProfiles();
+  const list = document.getElementById('profile-list');
+  if (!list) return;
+  if (profiles.length===0) {
+    list.innerHTML = '<div class="profile-list-empty">まだプロフィールがありません。したのらんから作成してください。</div>';
+    return;
+  }
+  list.innerHTML = profiles.map(p=>`
+    <button class="profile-card ${p.id===activeProfileId?'active-profile':''}" onclick="selectProfile('${p.id}')">
+      <span class="pc-name"><span class="pc-avatar">${avatarForName(p.name)}</span>${p.name}</span>
+      ${p.id===activeProfileId?'<span class="pc-active-tag">使用中</span>':''}
+      <span class="pc-actions">
+        <span class="pc-action-btn" onclick="event.stopPropagation();renameProfileById('${p.id}')">✏️ なまえ</span>
+        <span class="pc-action-btn danger" onclick="event.stopPropagation();deleteProfileById('${p.id}')">削除</span>
+      </span>
+    </button>`).join('');
+}
+function goProfileScreen(isFirstRun) {
+  document.getElementById('profile-back-row').style.display = isFirstRun ? 'none' : 'flex';
+  document.getElementById('profile-screen-title').textContent = isFirstRun ? 'だれが使う？' : 'プロフィールを切りかえる';
+  const hint = document.getElementById('profile-screen-hint');
+  if (hint) {
+    hint.textContent = (isFirstRun && hasLegacyData())
+      ? 'いままでのきろくが見つかりました。さいしょに作るプロフィールに自動で引きつがれます。'
+      : '端末を共有していても、きろく・バッジ・都道府県マスターを人ごとに分けて記録できます';
+  }
+  renderProfileList();
+  showScreen('screen-profile');
+}
+function closeProfileScreen() { showScreen('screen-title'); }
+function updateProfileLabel() {
+  const profiles = loadProfiles();
+  const p = profiles.find(x=>x.id===activeProfileId);
+  const nameEl = document.getElementById('profile-header-name');
+  const avEl = document.getElementById('profile-header-avatar');
+  if (nameEl) nameEl.textContent = p ? p.name : 'プロフィール';
+  if (avEl) avEl.textContent = p ? avatarForName(p.name) : '👤';
+}
+// データの書き出し・読みこみ（べつの端末への引きつぎ用）
+function exportProfileData() {
+  const profiles = loadProfiles();
+  const p = profiles.find(x=>x.id===activeProfileId);
+  const suffix = '::'+(activeProfileId||'default');
+  const data = {};
+  Object.keys(localStorage).filter(k=>k.endsWith(suffix)).forEach(k=>{
+    data[k.slice(0,-suffix.length)] = localStorage.getItem(k);
+  });
+  const payload = { app:'jgeo_quiz', profileName:p?p.name:'プロフィール', exportedAt:new Date().toISOString(), data };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `nihonchiquiz_${payload.profileName}_${dateStr}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function importProfileData(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let payload;
+    try { payload = JSON.parse(e.target.result); } catch(err) { alert('ファイルの読みこみに失敗しました。'); return; }
+    if (!payload || payload.app!=='jgeo_quiz' || !payload.data) { alert('このアプリのデータファイルではないようです。'); return; }
+    const profiles = loadProfiles();
+    const cur = profiles.find(x=>x.id===activeProfileId);
+    const curName = cur ? cur.name : 'プロフィール';
+    if (!confirm(`「${curName}」のきろくを、書き出したファイル（${payload.profileName||'不明'}）の内容で上書きします。よろしいですか？`)) return;
+    const suffix = '::'+(activeProfileId||'default');
+    Object.keys(payload.data).forEach(base=>{
+      localStorage.setItem(base+suffix, payload.data[base]);
+    });
+    alert('読みこみが完了しました。ページを再読みこみします。');
+    location.reload();
+  };
+  reader.readAsText(file);
+}
+// アプリ起動時のプロフィール解決。true を返せば通常どおりタイトルへ、false ならプロフィール選択画面を表示中
+function initProfileSystem() {
+  activeProfileId = getActiveProfileId();
+  const profiles = loadProfiles();
+  if (profiles.length===0) {
+    if (hasLegacyData()) {
+      const id = createProfile('プレイヤー1');
+      migrateLegacyDataToProfile(id);
+      setActiveProfileId(id);
+      return true;
+    }
+    goProfileScreen(true);
+    return false;
+  }
+  if (!activeProfileId || !profiles.some(p=>p.id===activeProfileId)) {
+    goProfileScreen(true);
+    return false;
+  }
+  return true;
+}
 
 // =====================================================
 // 間違いバンク（localStorage永続）
@@ -2680,11 +2934,11 @@ init();
 const WRONG_KEY = 'jgeo_wrong_v1';
 
 function loadWrongBank() {
-  try { wrongBank = JSON.parse(localStorage.getItem(WRONG_KEY)) || []; }
+  try { wrongBank = JSON.parse(localStorage.getItem(profileKey(WRONG_KEY))) || []; }
   catch { wrongBank = []; }
 }
 function saveWrongBank() {
-  localStorage.setItem(WRONG_KEY, JSON.stringify(wrongBank));
+  localStorage.setItem(profileKey(WRONG_KEY), JSON.stringify(wrongBank));
 }
 function addToWrongBank(q) {
   if (!q) return;
@@ -2737,7 +2991,7 @@ const CAT_COLORS = {
 };
 
 function renderProgressScreen() {
-  const rec = loadRecordsForProgress();
+  const rec = loadRecords();
   const stats = rec.stats || {};
   const totalQ   = stats.totalQ || 0;
   const perfectC = stats.perfectCount || 0;
@@ -2792,11 +3046,6 @@ function renderProgressScreen() {
     pb.disabled = true;
     pb.textContent = '📝 まちがいなし';
   }
-}
-
-function loadRecordsForProgress() {
-  try { return JSON.parse(localStorage.getItem('jgeo_records_v2')) || {}; }
-  catch { return {}; }
 }
 
 // showScreen に進捗更新を追加
@@ -2959,6 +3208,11 @@ function shakeCard() {
   card.classList.add('shake');
   setTimeout(() => card.classList.remove('shake'), 400);
 }
+
+// アプリ起動。すべてのトップレベル宣言（各種KEY定数など）が読み込まれた
+// このタイミングで呼び出すことで、宣言順序に依存する不具合を避ける。
+init();
+
 </script>
 </body>
 </html>
